@@ -108,6 +108,38 @@
             </div>
             @endif
         @endif
+
+    @if($row->form_name == 'Designation')
+        <div class="col-sm-3">
+            <div class="form-group">
+                <label style="margin-bottom: 0.5rem;">Shift Name *</label>
+                <div class="help-block alert" style="padding: 0px;font-size: 12px;"></div>
+                    @php $user_id = Auth::user()->id; @endphp
+                    @php 
+                    $shifts_result= DB::select("SELECT `id`,`shift_name` FROM `shift_masters` WHERE orgnization_id=$user_id");
+                    @endphp 
+                    <select class="form-control" style="width:100%" id="shift_id" name="shift_id" required>
+                        <option>Select Shift</option>
+                        @if(!empty($shifts_result))
+                            @foreach($shifts_result as $shifts_data)
+                                <option @if($shift_in->shift_id == $shifts_data->id) selected @endif value="{{$shifts_data->id}}">{{$shifts_data->shift_name}}</option>
+                            @endforeach
+                        @endif
+                    </select>
+            </div>
+        </div>
+
+        <div class="col-sm-3">
+            <div class="form-group">
+                <label style="margin-bottom: 0.5rem;">Monthly Salary *</label>
+                <div class="help-block alert" style="padding: 0px;font-size: 12px;"></div> 
+                    <input type="number" value="{{ $user_in->salary }}" placeholder="Salary" class="form-control" style="width:100%" id="salary" name="salary" required>
+                     
+            </div>
+        </div>
+
+        @endif
+
     @endforeach
     @if(!empty($updatedata['profile']))
     <div class="col-sm-3">

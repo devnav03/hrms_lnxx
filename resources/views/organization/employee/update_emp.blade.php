@@ -4,13 +4,11 @@
 .emp_head_h {
     height: 59px !important;
 }
-
 hr {
     margin: 7px -46px 19px;
     border: 0;
     border-top: 1px solid #c9c7c7;
 }
-
 @media only screen and (max-width: 768px) {
     #output {
         width: 4rem !important;

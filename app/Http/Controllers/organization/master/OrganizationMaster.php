@@ -28,6 +28,8 @@ use App\Models\Country;
 use App\Models\WeekDay;
 use App\Models\AssignTask;
 use App\Models\ShiftDuration;
+use App\Models\Vander;
+use App\Models\VanderStaff;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Models\TemplateMaster;
@@ -357,10 +359,104 @@ class OrganizationMaster extends Controller
         }
         return view('organization.master.add_project',compact('organisation','update','office','department'));
     }
+
+    public function AddVander(Request $request){
+        $user_id = Auth::user()->id;
+
+        $update=[];
+        $department=[];
+        if(!empty($request->segment(2))){
+            $update = Vander::where('id',$request->segment(2))->first();
+        }
+        $organisation = $this->GetOrganisation($user_id);
+        //dd($request);
+        if(!empty($request->name)){
+            if($request->vander_id>0){
+                $project_name = Vander::select('id')->where('id', '!=', $request->vander_id)->where('name', $request->name)->first();
+                if(empty($project_name->id)){
+                    $projects = Vander::where('id',$request->vander_id)->first();
+                    $projects->name = $request->name;
+                    $projects->address = $request->address;
+                    $projects->save();
+                    return redirect('vanders')->with('success','Updated successfuly');
+                }else{
+                    return redirect('vanders')->with('error','Vander Name Already Exist');
+                }
+            }else{
+                $project_name = Vander::select('id')->where('name',$request->name)->first();
+                // dd($project_name);
+                if(empty($project_name->id)){
+                    $projects = new Vander();
+                    $projects->name = $request->name;
+                    $projects->address = $request->address;
+                    $projects->save();
+                    return redirect('vanders')->with('success','Saved successfuly');
+                } else{
+                    return redirect('vanders')->with('error','Vander Name Already Exist');
+                }
+            } 
+        }
+        return view('organization.master.vander',compact('organisation','update'));
+    }
+    
+    public function AddVanderStaff(Request $request){
+        $user_id = Auth::user()->id;
+
+        $update=[];
+        $department=[];
+        if(!empty($request->segment(2))){
+            $update = VanderStaff::where('id',$request->segment(2))->first();
+        }
+        $organisation = $this->GetOrganisation($user_id);
+        //dd($request);
+        if(!empty($request->name)){
+            if($request->vanderstaff_id>0){
+                $project_name = VanderStaff::select('id')->where('id', '!=', $request->vanderstaff_id)->where('email', $request->email)->first();
+                    if(empty($project_name->id)){
+                    $projects = VanderStaff::where('id',$request->vanderstaff_id)->first();
+                    $projects->name = $request->name;
+                    $projects->email = $request->email;
+                    $projects->mobile = $request->mobile;
+                    $projects->vander_id = $request->vendor_id;
+                    $projects->save();
+                    return redirect('vanders-staff')->with('success','Updated successfuly');
+                    } else {
+                    return redirect('vanders-staff')->with('error','Email Already Exist');
+                }
+            } else {
+                    $project_name = VanderStaff::select('id')->where('email',$request->email)->first();
+                    if(empty($project_name->id)){
+                    $projects = new VanderStaff();
+                    $projects->name = $request->name;
+                    $projects->email = $request->email;
+                    $projects->mobile = $request->mobile;
+                    $projects->vander_id = $request->vendor_id;
+                    $projects->save();
+                    return redirect('vanders-staff')->with('success','Saved successfuly');
+                } else {
+                    return redirect('vanders-staff')->with('error','Email Already Exist');
+                }
+            } 
+        }
+        $vendors = Vander::where('status', 'Active')->select('id', 'name')->get();
+        return view('organization.master.vander_staff',compact('organisation','update', 'vendors'));
+    }
+
+
     public function DeleteProject(Request $request){
         ProjectMaster::where('id',$request->segment(2))->delete();
         return redirect('add-project')->with('success', 'Deleted successfully');  
     }
+    public function DeleteVander(Request $request){
+        Vander::where('id',$request->segment(2))->delete();
+        return redirect('vanders')->with('success', 'Deleted successfully');  
+    }
+    public function DeleteVanderStaff(Request $request){
+        VanderStaff::where('id',$request->segment(2))->delete();
+        return redirect('vanders-staff')->with('success', 'Deleted successfully');  
+    }
+
+    
     public function DeleteListLeave(Request $request){
         Leave::where('id',$request->segment(2))->delete();
         return redirect('list-leave')->with('success', 'Deleted successfully');  

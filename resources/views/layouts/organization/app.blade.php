@@ -94,10 +94,18 @@
                             <li class="nav-item"> <a class="nav-link" href="{{url('add-source')}}">Recruitment Source Master</a></li>
                             <li class="nav-item"> <a class="nav-link" href="{{url('add-notice-period')}}">Notice Period Master</a></li>
                             <li class="nav-item"> <a class="nav-link" href="{{url('add-educations')}}">Education Master</a></li> 
-                            <li class="nav-item"> <a class="nav-link" href="{{url('bank-master')}}">Bank Master</a></li>
-                            <li class="nav-item"> <a class="nav-link" href="{{url('add-project')}}">Task Master</a></li>
-                            <li class="nav-item"> <a class="nav-link" href="{{url('template-master')}}">Template Master</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{url('bank-master')}}">Bank Master</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{url('add-project')}}">Task Master</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{url('template-master')}}">Template Master</a></li>
+
+                            <li class="nav-item"> <a class="nav-link" href="{{url('vanders')}}">Vanders</a></li>
+                            <li class="nav-item"> <a class="nav-link" href="{{url('vanders-staff')}}">Vander's Staff</a></li>
+
                             <li class="nav-item"> <a class="nav-link" href="{{url('header-footer-template-master')}}">Header and Footer Master</a></li>
+
+                            <li class="nav-item"> <a class="nav-link" href="{{ route('holiday-calendar')}}">Holidays</a></li>
+
+                            
                         </ul>
                     </div>
                 </li>
@@ -312,7 +320,12 @@
                             </li>
                             <li class="nav-item"> <a class="nav-link" href="{{url('salary-generation')}}">Salary Generation</a>
                             </li>
-                            <li class="nav-item"> <a class="nav-link" href="{{url('salary-approval-flow')}}">Salary Approval Flow</a>
+
+                            <li class="nav-item"> <a class="nav-link" href="{{ route('salary-history')}}">Salary History</a>
+                            </li>
+
+
+                           <!--  <li class="nav-item"> <a class="nav-link" href="{{url('salary-approval-flow')}}">Salary Approval Flow</a>
                             </li>
                             <li class="nav-item"> <a class="nav-link" href="{{url('incentive-compensation')}}">Incentive Compensation</a>
                             </li>
@@ -321,7 +334,7 @@
                             <li class="nav-item"> <a class="nav-link" href="{{url('investment-declaration')}}">Investment Declaration</a>
                             </li>
                             <li class="nav-item"> <a class="nav-link" href="{{url('tax-computation')}}">Tax Computation</a>
-                            </li>
+                            </li> -->
                         </ul>
                     </div>
                 </li>

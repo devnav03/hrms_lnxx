@@ -48,15 +48,9 @@ Route::any('timesheet-history-details', [ApiController::class, 'timesheet_histor
 Route::any('push-notification-list', [ApiController::class, 'push_notification_list']);
 Route::any('acknowledge-notification', [ApiController::class, 'acknowledge_notification']);
 
-
-
-
-
-
-
-
-
-
+Route::any('employee-list', [ApiController::class, 'employee_list']);
+Route::any('employee-mark-attendance', [ApiController::class, 'employee_mark_attendance']);
+Route::any('employee-today-attendance', [ApiController::class, 'EmployeeTodayAttendance']);
 
 
 

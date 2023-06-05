@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\organization\employee;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -151,7 +150,6 @@ class EmployeeController extends Controller
                     $empdocument->save();
                 }
             }
-            
             return redirect('add-employees')->with('success','Saved successfuly');
         }
         $organisation = Organisation::where(['user_id'=>Auth::user()->id])->first();
@@ -186,8 +184,6 @@ class EmployeeController extends Controller
     public function AttendanceDetails(){
         $user_id = Auth::user()->id;
         $organisation = Organisation::where(['user_id'=>$user_id])->first();
-
-        
         return view('organization.employee.attendance_details',compact('organisation'));
     }
     
@@ -345,33 +341,58 @@ class EmployeeController extends Controller
         //     return redirect('list-leave')->with('success','Saved successfuly');
         // }
     }
-    public function AddApprovalFlow(Request $request){
+    public function AddApprovalFlow(Request $request){  
+       $flow_id=$request->id; 
+        // echo "<pre>"; print_r($request->all()); echo "</pre>"; die;
         $user_id = Auth::user()->id;
         $organisation = Organisation::where(['user_id'=>$user_id])->first();
-        $flow_master = FlowMaster::where('orgnization_id',$user_id)->where('is_complete',1)->orderBy('id', 'DESC')->get();
+        $flow_master = FlowMaster::where('orgnization_id',$user_id)->where('id',$flow_id)->orderBy('id', 'DESC')->get();
+            $office = OfficeMaster::select('id','office_name')->where('orgnization_id',$user_id)->get();
+        $select = ApprovalFlow::select('id','office_id')->where('orgnization_id',$user_id)->first();
+        $leave_flow_result = DB::select("SELECT a.id,g.flow_name,g.id as flow_id,b.office_name,c.department_name,d.position_name,e.emp_type,CONCAT(f.name,' - ',f.total_leave) as name,a.created_at FROM `approval_flows` as a INNER JOIN office_masters as b on a.office_id=b.id INNER JOIN department_masters as c on a.department_id=c.id INNER JOIN position_masters as d on a.position_id=d.id INNER JOIN leave_types as f on a.leave_type=f.id INNER JOIN emp_types as e on f.emp_type=e.id INNER JOIN flow_masters as g on a.flow_id=g.id WHERE a.orgnization_id=$user_id AND g.id=$flow_id ORDER BY a.id ASC");
+
+                //echo "<pre>"; print_r($leave_flow_result); echo "</pre>"; die;
+
+            $default_authority_flow = DB::select("SELECT a.id,a.flow_id,b.flow_name,c.office_name,d.department_name,e.position_name,f.name,a.created_at FROM `leave_authorities` as a INNER JOIN flow_masters as b on a.flow_id=b.id INNER JOIN office_masters as c on a.office_id=c.id INNER JOIN department_masters as d on a.department_id=d.id INNER JOIN position_masters as e on a.position_id=e.id INNER JOIN users as f ON a.user_id=f.id AND a.orgnization_id=$user_id AND b.id=$flow_id ORDER BY a.id ASC");
+           // echo "<pre>"; print_r($default_authority_flow); echo "</pre>"; die;
+            return view('organization.employee.add_approval_flow',compact('organisation','flow_master','office','leave_flow_result','default_authority_flow'));
+    }
+
+    public function ListApprovalFlow(Request $request){ 
+        $user_id = Auth::user()->id;
+        $organisation = Organisation::where(['user_id'=>$user_id])->first();
+        $flow_master = FlowMaster::where('orgnization_id',$user_id)->orderBy('id', 'DESC')->get();
         $office = OfficeMaster::select('id','office_name')->where('orgnization_id',$user_id)->get();
         $select = ApprovalFlow::select('id','office_id')->where('orgnization_id',$user_id)->first();
-
+       
         $leave_flow_result = DB::select("SELECT a.id,g.flow_name,b.office_name,c.department_name,d.position_name,e.emp_type,CONCAT(f.name,' - ',f.total_leave) as name,a.created_at FROM `approval_flows` as a INNER JOIN office_masters as b on a.office_id=b.id INNER JOIN department_masters as c on a.department_id=c.id INNER JOIN position_masters as d on a.position_id=d.id INNER JOIN leave_types as f on a.leave_type=f.id INNER JOIN emp_types as e on f.emp_type=e.id INNER JOIN flow_masters as g on a.flow_id=g.id WHERE a.orgnization_id=$user_id ORDER BY a.id ASC");
 
-        $approval_flow_result = DB::select("SELECT a.id,a.flow_id,b.flow_name,c.office_name,d.department_name,e.position_name,f.name,a.created_at FROM `leave_authorities` as a INNER JOIN flow_masters as b on a.flow_id=b.id INNER JOIN office_masters as c on a.office_id=c.id INNER JOIN department_masters as d on a.department_id=d.id INNER JOIN position_masters as e on a.position_id=e.id INNER JOIN users as f ON a.user_id=f.id AND a.orgnization_id=$user_id ORDER BY a.id ASC");
-                  // echo "<pre>"; print_r($approval_flow_result); echo "</pre>"; die;
-        return view('organization.employee.add_approval_flow',compact('organisation','flow_master','office','leave_flow_result','approval_flow_result'));
-
-        //return view('organization.employee.add_approval_flow',compact('organisation','flow_master','office'));
+            return view('organization.employee.approval_flow',compact('organisation','flow_master','office','leave_flow_result'));
     }
-     
 
-    public function DeleteLeaveFlow($id){
+    public function DeleteLeaveFlow($flow_id,$id){
         $user_id = Auth::user()->id;
         ApprovalFlow::where('id',$id)->where('orgnization_id',$user_id)->delete();
-        return redirect('add-approval-flow')->with('success','Deleted successfuly');
+        return redirect('add-approval-flow/'.$flow_id)->with('success','Deleted successfuly');
+    }
+
+    public function DeleteFlow($id){   
+        $user_id = Auth::user()->id;
+        FlowMaster::where('id',$id)->where('orgnization_id',$user_id)->delete();
+        return redirect('approval-flow')->with('success','Flow Deleted successfuly');
+    }
+
+     public function DeleteLeaveTypes($id){
+        $user_id = Auth::user()->id;
+        FlowMaster::where('id',$id)->where('orgnization_id',$user_id)->delete();
+        return redirect('approval-flow/')->with('success','Deleted successfuly');
     }
 
     public function DeleteApprovalAuthority($id,$flow_id){ 
         $user_id = Auth::user()->id;
         LeaveAuthority::where('id',$id)->where('flow_id',$flow_id)->where('orgnization_id',$user_id)->delete();
-        return redirect('add-approval-flow')->with('success','Authority Deleted successfuly');
+        return redirect('add-approval-flow/'.$flow_id)->with('success','Authority Deleted successfuly');
     }
+    
 
 }

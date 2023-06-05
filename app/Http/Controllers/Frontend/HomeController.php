@@ -19,9 +19,10 @@ use App\Models\SendOfferLettersToCandidate;
 use App\Models\SendHrRequest;
 use App\Models\PositionMaster;
 use App\Models\SendVisaApproval;
-
-
-
+use App\Models\VanderStaff;
+use App\Models\ShiftMaster;
+use App\Models\ShiftOfDay;
+use App\Models\HolidayCalendar;
 use Intervention\Image\ImageManagerStatic as Image;
 use Auth;
 use DB;
@@ -77,6 +78,644 @@ class HomeController extends Controller {
                 echo "This e-Visa is already rejected."; exit;
             }
         }
+    }
+    
+    public function holiday_calendar_crone(){
+
+        $month = date('m');
+        $year = date('Y');
+        $shifts = ShiftMaster::select('id')->get();
+
+        if(count($shifts) != 0){
+            foreach ($shifts as $shift) {
+                $holiday_calendars = HolidayCalendar::where('year', $year)->where('month', $month)->select('id', 'day')->get();
+                if(count($holiday_calendars)){
+                    foreach ($holiday_calendars as $holiday_calendar) {
+                        $date = $year.'-'.$month.'-'.$holiday_calendar->day;
+                        $check = ShiftOfDay::where('day', $date)->where('shift_id', $shift->id)->count();
+                        if($check == 0){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $shift->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $date;
+                            $leave->save();
+                        } 
+                    }
+                }
+            }
+        }
+    }
+
+    public function shift_day_crone(){
+
+        $holidays_info = ShiftMaster::select('holidays', 'id')->get();
+        $old_date = date('Y-m');
+        \DB::table('shift_of_days')->where('month', $old_date)->delete();
+         
+        if(count($holidays_info) != 0){
+            $week_of_month=['First','Second','Third','Fourth','Fifth'];
+
+            foreach ($holidays_info as $holiday) {
+
+                $days = json_decode($holiday->holidays);
+                
+                if($days) {
+
+                    $monday = []; 
+                    if(isset($days[0]->MONDAY)) {
+                        $monday = $days[0]->MONDAY;
+                    } else if(isset($days[1]->MONDAY)) {
+                        $monday = $days[1]->MONDAY; 
+                    } else if(isset($days[2]->MONDAY)) {
+                        $monday = $days[2]->MONDAY;
+                    } else if(isset($days[3]->MONDAY)) {
+                        $monday = $days[3]->MONDAY;
+                    } else if(isset($days[4]->MONDAY)) {
+                        $monday = $days[4]->MONDAY;
+                    } else if(isset($days[5]->MONDAY)) {
+                        $monday = $days[5]->MONDAY;
+                    } else if(isset($days[6]->MONDAY)) {
+                        $monday = $days[6]->MONDAY;
+                    }
+                
+                if(count($monday) != 0){
+                    $year = date('Y');
+                    $month = date('m');
+                    $numDays = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+                    $mondays = array();
+                    for ($day = 1; $day <= $numDays; $day++) {
+                        $date = strtotime("$year-$month-$day");
+                        if (date('N', $date) == 1) { 
+                            $mondays[] = date('Y-m-d', $date);
+                        }
+                    }
+
+                    if(in_array('First', $monday)){
+                        if(isset($mondays[0])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[0];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Second', $monday)){
+                        if(isset($mondays[1])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[1];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Third', $monday)){
+                        if(isset($mondays[2])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[2];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Fourth', $monday)){
+                        if(isset($mondays[3])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[3];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Fifth', $monday)){
+                        if(isset($mondays[4])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[4];
+                            $leave->save();
+                        }
+                    }
+                }
+
+                $tuesday = []; 
+                    if(isset($days[0]->TUESDAY)) {
+                        $tuesday = $days[0]->TUESDAY;
+                    } else if(isset($days[1]->TUESDAY)) {
+                        $tuesday = $days[1]->TUESDAY; 
+                    } else if(isset($days[2]->TUESDAY)) {
+                        $tuesday = $days[2]->TUESDAY;
+                    } else if(isset($days[3]->TUESDAY)) {
+                        $tuesday = $days[3]->TUESDAY;
+                    } else if(isset($days[4]->TUESDAY)) {
+                        $tuesday = $days[4]->TUESDAY;
+                    } else if(isset($days[5]->TUESDAY)) {
+                        $tuesday = $days[5]->TUESDAY;
+                    } else if(isset($days[6]->TUESDAY)) {
+                        $tuesday = $days[6]->TUESDAY;
+                    }
+                
+                if(count($tuesday) != 0){
+                    $year = date('Y');
+                    $month = date('m');
+                    $numDays = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+                    $mondays = array();
+                    for ($day = 1; $day <= $numDays; $day++) {
+                        $date = strtotime("$year-$month-$day");
+                        if (date('N', $date) == 2) { 
+                            $mondays[] = date('Y-m-d', $date);
+                        }
+                    }
+
+                    if(in_array('First', $tuesday)){
+                        if(isset($mondays[0])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[0];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Second', $tuesday)){
+                        if(isset($mondays[1])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[1];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Third', $tuesday)){
+                        if(isset($mondays[2])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[2];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Fourth', $tuesday)){
+                        if(isset($mondays[3])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[3];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Fifth', $tuesday)){
+                        if(isset($mondays[4])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[4];
+                            $leave->save();
+                        }
+                    }
+                }
+
+                $wednesday = []; 
+                    if(isset($days[0]->WEDNESDAY)) {
+                        $wednesday = $days[0]->WEDNESDAY;
+                    } else if(isset($days[1]->WEDNESDAY)) {
+                        $wednesday = $days[1]->WEDNESDAY; 
+                    } else if(isset($days[2]->WEDNESDAY)) {
+                        $wednesday = $days[2]->WEDNESDAY;
+                    } else if(isset($days[3]->WEDNESDAY)) {
+                        $wednesday = $days[3]->WEDNESDAY;
+                    } else if(isset($days[4]->WEDNESDAY)) {
+                        $wednesday = $days[4]->WEDNESDAY;
+                    } else if(isset($days[5]->WEDNESDAY)) {
+                        $wednesday = $days[5]->WEDNESDAY;
+                    } else if(isset($days[6]->WEDNESDAY)) {
+                        $wednesday = $days[6]->WEDNESDAY;
+                    }
+                
+                if(count($wednesday) != 0){
+                    $year = date('Y');
+                    $month = date('m');
+                    $numDays = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+                    $mondays = array();
+                    for ($day = 1; $day <= $numDays; $day++) {
+                        $date = strtotime("$year-$month-$day");
+                        if (date('N', $date) == 3) { 
+                            $mondays[] = date('Y-m-d', $date);
+                        }
+                    }
+
+                    if(in_array('First', $wednesday)){
+                        if(isset($mondays[0])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[0];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Second', $wednesday)){
+                        if(isset($mondays[1])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[1];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Third', $wednesday)){
+                        if(isset($mondays[2])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[2];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Fourth', $wednesday)){
+                        if(isset($mondays[3])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[3];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Fifth', $wednesday)){
+                        if(isset($mondays[4])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[4];
+                            $leave->save();
+                        }
+                    }
+                }
+
+                $thursday = []; 
+                    if(isset($days[0]->THURSDAY)) {
+                        $thursday = $days[0]->THURSDAY;
+                    } else if(isset($days[1]->THURSDAY)) {
+                        $thursday = $days[1]->THURSDAY; 
+                    } else if(isset($days[2]->THURSDAY)) {
+                        $thursday = $days[2]->THURSDAY;
+                    } else if(isset($days[3]->THURSDAY)) {
+                        $thursday = $days[3]->THURSDAY;
+                    } else if(isset($days[4]->THURSDAY)) {
+                        $thursday = $days[4]->THURSDAY;
+                    } else if(isset($days[5]->THURSDAY)) {
+                        $thursday = $days[5]->THURSDAY;
+                    } else if(isset($days[6]->THURSDAY)) {
+                        $thursday = $days[6]->THURSDAY;
+                    }
+                
+                if(count($thursday) != 0){
+                    $year = date('Y');
+                    $month = date('m');
+                    $numDays = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+                    $mondays = array();
+                    for ($day = 1; $day <= $numDays; $day++) {
+                        $date = strtotime("$year-$month-$day");
+                        if (date('N', $date) == 4) { 
+                            $mondays[] = date('Y-m-d', $date);
+                        }
+                    }
+
+                    if(in_array('First', $thursday)){
+                        if(isset($mondays[0])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[0];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Second', $thursday)){
+                        if(isset($mondays[1])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[1];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Third', $thursday)){
+                        if(isset($mondays[2])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[2];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Fourth', $thursday)){
+                        if(isset($mondays[3])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[3];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Fifth', $thursday)){
+                        if(isset($mondays[4])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[4];
+                            $leave->save();
+                        }
+                    }
+                }
+
+                $friday = []; 
+                    if(isset($days[0]->FRIDAY)) {
+                        $friday = $days[0]->FRIDAY;
+                    } else if(isset($days[1]->FRIDAY)) {
+                        $friday = $days[1]->FRIDAY; 
+                    } else if(isset($days[2]->FRIDAY)) {
+                        $friday = $days[2]->FRIDAY;
+                    } else if(isset($days[3]->FRIDAY)) {
+                        $friday = $days[3]->FRIDAY;
+                    } else if(isset($days[4]->FRIDAY)) {
+                        $friday = $days[4]->FRIDAY;
+                    } else if(isset($days[5]->FRIDAY)) {
+                        $friday = $days[5]->FRIDAY;
+                    } else if(isset($days[6]->FRIDAY)) {
+                        $friday = $days[6]->FRIDAY;
+                    }
+                
+                if(count($friday) != 0){
+                    $year = date('Y');
+                    $month = date('m');
+                    $numDays = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+                    $mondays = array();
+                    for ($day = 1; $day <= $numDays; $day++) {
+                        $date = strtotime("$year-$month-$day");
+                        if (date('N', $date) == 5) { 
+                            $mondays[] = date('Y-m-d', $date);
+                        }
+                    }
+
+                    if(in_array('First', $friday)){
+                        if(isset($mondays[0])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[0];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Second', $friday)){
+                        if(isset($mondays[1])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[1];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Third', $friday)){
+                        if(isset($mondays[2])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[2];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Fourth', $friday)){
+                        if(isset($mondays[3])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[3];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Fifth', $friday)){
+                        if(isset($mondays[4])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[4];
+                            $leave->save();
+                        }
+                    }
+                }
+
+                $saturday = []; 
+                    if(isset($days[0]->SATURDAY)) {
+                        $saturday = $days[0]->SATURDAY;
+                    } else if(isset($days[1]->SATURDAY)) {
+                        $saturday = $days[1]->SATURDAY; 
+                    } else if(isset($days[2]->SATURDAY)) {
+                        $saturday = $days[2]->SATURDAY;
+                    } else if(isset($days[3]->SATURDAY)) {
+                        $saturday = $days[3]->SATURDAY;
+                    } else if(isset($days[4]->SATURDAY)) {
+                        $saturday = $days[4]->SATURDAY;
+                    } else if(isset($days[5]->SATURDAY)) {
+                        $saturday = $days[5]->SATURDAY;
+                    } else if(isset($days[6]->SATURDAY)) {
+                        $saturday = $days[6]->SATURDAY;
+                    }
+                
+                if(count($saturday) != 0){
+                    $year = date('Y');
+                    $month = date('m');
+                    $numDays = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+                    $mondays = array();
+                    for ($day = 1; $day <= $numDays; $day++) {
+                        $date = strtotime("$year-$month-$day");
+                        if (date('N', $date) == 6) { 
+                            $mondays[] = date('Y-m-d', $date);
+                        }
+                    }
+
+                    if(in_array('First', $saturday)){
+                        if(isset($mondays[0])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[0];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Second', $saturday)){
+                        if(isset($mondays[1])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[1];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Third', $saturday)){
+                        if(isset($mondays[2])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[2];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Fourth', $saturday)){
+                        if(isset($mondays[3])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[3];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Fifth', $saturday)){
+                        if(isset($mondays[4])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[4];
+                            $leave->save();
+                        }
+                    }
+                }
+
+                $sunday = []; 
+                    if(isset($days[0]->SUNDAY)) {
+                        $sunday = $days[0]->SUNDAY;
+                    } else if(isset($days[1]->SUNDAY)) {
+                        $sunday = $days[1]->SUNDAY; 
+                    } else if(isset($days[2]->SUNDAY)) {
+                        $sunday = $days[2]->SUNDAY;
+                    } else if(isset($days[3]->SUNDAY)) {
+                        $sunday = $days[3]->SUNDAY;
+                    } else if(isset($days[4]->SUNDAY)) {
+                        $sunday = $days[4]->SUNDAY;
+                    } else if(isset($days[5]->SUNDAY)) {
+                        $sunday = $days[5]->SUNDAY;
+                    } else if(isset($days[6]->SUNDAY)) {
+                        $sunday = $days[6]->SUNDAY;
+                    }
+                
+                if(count($sunday) != 0){
+                    $year = date('Y');
+                    $month = date('m');
+                    $numDays = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+                    $mondays = array();
+                    for ($day = 1; $day <= $numDays; $day++) {
+                        $date = strtotime("$year-$month-$day");
+                        if (date('N', $date) == 7) { 
+                            $mondays[] = date('Y-m-d', $date);
+                        }
+                    }
+
+                    if(in_array('First', $sunday)){
+                        if(isset($mondays[0])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[0];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Second', $sunday)){
+                        if(isset($mondays[1])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[1];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Third', $sunday)){
+                        if(isset($mondays[2])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[2];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Fourth', $sunday)){
+                        if(isset($mondays[3])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[3];
+                            $leave->save();
+                        }
+                    }
+                    if(in_array('Fifth', $sunday)){
+                        if(isset($mondays[4])){
+                            $leave = new ShiftOfDay();
+                            $leave->shift_id = $holiday->id;
+                            $leave->month = date('Y-m');
+                            $leave->day = $mondays[4];
+                            $leave->save();
+                        }
+                    }
+                }
+
+            }
+
+            }
+
+        }
+    }
+    
+    public function getPro(Request $request){
+        if($request->company_id == 0){
+
+            $user_id = Auth::user()->id;
+            $user_org = User::where('id', $user_id)->select('organisation_id')->first();
+            $pos_name = 'pro';    
+            $designation = PositionMaster::where('orgnization_id', $user_org->organisation_id)
+            ->where('position_name', 'like', '%' . $pos_name . '%')->pluck('id')->toArray();
+
+            $pros = \DB::table('users')
+            ->join('employee_infos', 'employee_infos.user_id', '=', 'users.id')
+            ->select('users.id', 'users.name', 'employee_infos.employee_code')->whereIn('employee_infos.position_id', $designation)->where('employee_infos.employee_code', '!=', NULL)->get(); 
+
+            $subcategoryList='';
+            foreach($pros as $key => $subcategory)
+            $subcategoryList .= '<option value="' . $subcategory->id . '">'. $subcategory->name .' ('. $subcategory->employee_code .')</option>';
+            return $subcategoryList; 
+
+        } else {
+
+            $pros = VanderStaff::where('status', 'Active')->where('vander_id', $request->company_id)->select('name', 'email', 'id')->get();
+
+            $subcategoryList='';
+            foreach($pros as $key => $subcategory)
+            $subcategoryList .= '<option value="' . $subcategory->id . '">'. $subcategory->name .' ('. $subcategory->email .')</option>';
+            return $subcategoryList; 
+
+        }
+
+    }
+
+    public function candidate_profile($id = null){
+
+        try {
+            
+            $id = \decrypt($id);
+            $OfferLetters = SendOfferLettersToCandidate::where('candidate_id', $id)->first();
+            if(empty($OfferLetters)){
+                echo "Something went wrong"; exit;
+            } else { 
+
+                $org = Organisation::where('user_id', $OfferLetters->organisation_id)->select('logo')->first();
+                $SendHrRequest = SendHrRequest::where('id', $id)->first();
+                $candidate_id = $id;
+
+                $position = PositionMaster::where('id', $SendHrRequest->candidate_position_id)->select('position_name')->first();
+
+                   
+                return view('user.employee.candidate_profile', compact('id', 'org', 'OfferLetters', 'SendHrRequest', 'candidate_id', 'position'));
+             
+            }
+
+        } catch (Exception $ex) {
+            return false;
+        }  
+
     }
 
     #################### Reject eVisa Approval Mail ###############
@@ -223,11 +862,13 @@ class HomeController extends Controller {
     
     public function Send_offer_letter_accept_Mail($data, $email){
         try {
+
             $template_data = [
                 'email' => $email,
                 'name' => $data->name,
                 'position'=>$data->position,
             ];
+            
             Mail::send(['html'=>'email.offer_letter_accept'], $template_data,
                 function ($message) use ($data) {
                     $message->to($data->email)->from('lnxxapp@gmail.com')->subject('Offer Letter Accepted');

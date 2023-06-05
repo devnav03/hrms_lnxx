@@ -61,6 +61,8 @@ use App\Models\MedicalAppointment;
 use App\Models\MedicalReport;
 use App\Models\EidProcesse;
 use App\Models\EidDocument;
+use App\Models\Vander;
+use App\Models\VanderStaff;
 use Illuminate\Support\Str;
 use Auth;
 use DB;
@@ -99,7 +101,7 @@ public function GetDocuments(Request $request){
 
         if($document_data=='0'){
             $data="";
-        }else{
+        } else {
              $data="Document already uploaded ! Please select other docs.";
         }
 
@@ -228,20 +230,17 @@ public function GetCandidateAllHiringDetails(Request $request){
                             foreach($LcMolDocs as $LcMolDoc){
                         $i++;        
                         ?>
-
                         <tr>
                                 <td><?php echo $i; ?></td>    
                                 <td>Medical Test Report</td>
                                 <td><?php echo $LcMolDoc->title;?></td>
-                                <td><a class="btn btn-primary btn-xs" href="uploads/medical_test/<?php echo $LcMolDoc->file_name;?>" download>View</a></td>
-
+                                <td><a class="btn btn-primary btn-xs" href="uploads/medical_test/<?php echo $LcMolDoc->file_name;?>" target="_blank">View</a></td>
                             <?php  
                             $user_name = User::where('id', $LcMolDoc->created_by)->select('name')->first();
                             ?>
                             <td> <?php echo $user_name->name; ?> </td>
-                        
                             <td> <?php echo date('d M, Y', strtotime($LcMolDoc->created_at)); ?> </td>
-                            </tr>
+                        </tr>
 
                         <?php
                         }
@@ -257,7 +256,7 @@ public function GetCandidateAllHiringDetails(Request $request){
                                 <td><?php echo $i; ?></td>    
                                 <td>eVisa Document</td>
                                 <td><?php echo $LcMolDoc->title;?></td>
-                                <td><a class="btn btn-primary btn-xs" href="uploads/upload_lc_mol_doc/<?php echo $LcMolDoc->file_name;?>" download>View</a></td>
+                                <td><a class="btn btn-primary btn-xs" href="uploads/upload_lc_mol_doc/<?php echo $LcMolDoc->file_name;?>" target="_blank">View</a></td>
 
                             <?php  
                             $user_name = User::where('id', $LcMolDoc->created_by)->select('name')->first();
@@ -270,8 +269,6 @@ public function GetCandidateAllHiringDetails(Request $request){
                         <?php
                         }
                     }
-
-
                         $LcMolDocs = SignedLcMolDoc::where('candidate_id', $candidate_id)->select('title', 'file_name', 'created_by', 'created_at')->get();
                         if(!empty($LcMolDocs)){ 
                             foreach($LcMolDocs as $LcMolDoc){
@@ -282,7 +279,7 @@ public function GetCandidateAllHiringDetails(Request $request){
                                 <td><?php echo $i; ?></td>    
                                 <td>LC/MOL Signed Copy</td>
                                 <td><?php echo $LcMolDoc->title;?></td>
-                                <td><a class="btn btn-primary btn-xs" href="uploads/upload_lc_mol_doc/<?php echo $LcMolDoc->file_name;?>" download>View</a></td>
+                                <td><a class="btn btn-primary btn-xs" href="uploads/upload_lc_mol_doc/<?php echo $LcMolDoc->file_name;?>" target="_blank">View</a></td>
 
 
                             <?php  
@@ -312,23 +309,18 @@ public function GetCandidateAllHiringDetails(Request $request){
                                 <td><?php echo $i; ?></td>    
                                 <td>LC/MOL Document</td>
                                 <td><?php echo $LcMolDoc->title;?></td>
-                                <td><a class="btn btn-primary btn-xs" href="uploads/upload_lc_mol_doc/<?php echo $LcMolDoc->file_name;?>" download>View</a></td>
-
+                                <td><a class="btn btn-primary btn-xs" href="uploads/upload_lc_mol_doc/<?php echo $LcMolDoc->file_name;?>" target="_blank">View</a></td>
                             <?php  
                             $user_name = User::where('id', $LcMolDoc->created_by)->select('name')->first();
                             ?>
                             <td> <?php echo $user_name->name; ?> </td>
-                        
                             <td> <?php echo date('d M, Y', strtotime($LcMolDoc->created_at)); ?> </td>
-                            </tr>
+                        </tr>
 
                        <?php
                         }
-
                         }
-
                         if(!empty($getRequiredDoc)){ 
-                       
                         ?>
                             <?php foreach($getRequiredDoc as $requiredDoc){
                             $i++;
@@ -340,7 +332,7 @@ public function GetCandidateAllHiringDetails(Request $request){
                             ?>     
                                 <td><?php echo $doc->document_title; ?></td>
                                 <td><?php echo $requiredDoc->document_title;?></td>
-                                <td><a class="btn btn-primary btn-xs" href="uploads/candidate-upload-required-doc/<?php echo $requiredDoc->document_file;?>" download>View</a></td>
+                                <td><a class="btn btn-primary btn-xs" href="uploads/candidate-upload-required-doc/<?php echo $requiredDoc->document_file;?>" target="_blank">View</a></td>
 
                             <?php if($requiredDoc->created_by == 'HR'){ 
                             $user_name = User::where('id', $requiredDoc->organisation_id)->select('name')->first();
@@ -355,14 +347,47 @@ public function GetCandidateAllHiringDetails(Request $request){
                      
                             <?php } ?> 
                      
+
                            <?php 
-
-
-                           if(!empty($results_data->candidate_resume)) {
-
+                            $results_data = SendOfferLettersToCandidate::where('candidate_id', $candidate_id)->select('organisation_id', 'document_title', 'document_file', 'created_at')->first();
+                           if(!empty($results_data->organisation_id)) {
+                            
+                            $document_title = json_decode($results_data->document_title);
+                            $document_file = json_decode($results_data->document_file);
+                            foreach ($document_title as $key => $value) {
+                                $i++;
                             ?>
                             <tr>
-                            <td><?php echo $i+1; ?></td>
+                            <td><?php echo $i; ?></td>
+                            <td>Offer Letter</td>
+                            <td><?php echo $value; ?></td>
+                            <td>
+                            <?php
+                            foreach ($document_file as $key1 => $value1) {
+                                if($key1 == $key) {
+                            ?>    
+                            <a target="_blank" class="btn btn-primary btn-xs" href="uploads/upload_offer_letter_document/<?php echo $value1; ?>">View</a>
+                            <?php } } ?>
+                        </td>
+
+                          <?php  
+                            $user_name = User::where('id', $results_data->organisation_id)->select('name')->first();
+                            ?>
+                           <td><?php echo $user_name->name; ?></td>
+                           <td><?php echo date('d M, Y', strtotime($results_data->created_at)); ?></td>
+                        </tr>
+                       
+                        <?php }  } ?>
+                        
+                        <?php 
+
+                        $results_data = SendHrRequest::where('id', $candidate_id)->select('candidate_resume', 'manager_name', 'created_at')->first();
+
+                           if(!empty($results_data->candidate_resume)) {
+                             $i++;
+                            ?>
+                            <tr>
+                            <td><?php echo $i; ?></td>
                             <td>Resume</td>
                             <td></td>
                             <td>
@@ -381,74 +406,190 @@ public function GetCandidateAllHiringDetails(Request $request){
                             </tr>
                             <tr>
                                 <td><b>S No.</b></td>
-                                <td><b>Date</b></td>
                                 <td><b>Process</b></td>
                                 <td><b>Status</b></td>
                                 <td><b>By</b></td>
+                                <td><b>Date</b></td>
                             </tr>
-                        <?php
-                            $offer_letter_status = SendOfferLettersToCandidate::where('candidate_id', $results_data->id)->select('status', 'updated_at')->first();
-                        if($offer_letter_status->status != 0) {
-                        ?>
-                        <tr>
-                            <td>1</td>
-                            <td><?php echo date('d M, Y', strtotime($offer_letter_status->updated_at)); ?></td>
-                            <td>Offer Letter</td>
-                            <td><?php if($offer_letter_status->status == 1){  ?> Accept
-                            <?php } else { ?> Reject <?php } ?></td>
-                            <td>Candidate</td>
-                        </tr>
-                        <?php
-                         
-                            $sign_doc = CandidateRequiredDocument::where('candidate_id', $results_data->id)->where('document_id', 6)->select('doc_upload_date', 'created_by', 'organisation_id')->first();
-                        if(!empty($sign_doc)){    
-                        ?>
-                        <tr>
-                            <td>2</td>
-                            <td><?php echo date('d M, Y', strtotime($sign_doc->doc_upload_date)); ?></td>
-                            <td>Offer Letter Signed Document</td>
+
+                    <?php 
+                    $j = 1;
+                    $SendProLcMol = EidDocument::where('candidate_id', $candidate_id)->select('created_by', 'created_at')->orderBy('id', 'desc')->first();
+                    if(!empty($SendProLcMol)) {
+                    ?> 
+                    <tr>
+                            <td><?php echo $j++; ?></td>
+                            <td>EID Document</td>
                             <td>Uploaded</td>
                         <?php 
-                        if($sign_doc->created_by == 'HR') {
-                        $user_name = User::where('id', $sign_doc->organisation_id)->select('name')->first();
+                     
+                        $user_name = User::where('id', $SendProLcMol->created_by)->select('name')->first();
                             ?>
                             <td> <?php echo $user_name->name; ?> </td>
-
-                        <?php } else { ?>
-                            <td>Candidate</td>
-                        <?php } ?>
-                        </tr>
-                    <?php
-                       
-                    $SendVisaApproval = SendVisaApproval::where('candidate_id', $results_data->id)->select('organisation_id', 'created_at')->first();
-                    if(!empty($SendVisaApproval)) {
-                    ?>
-                       
-                    <tr>
-                            <td>3</td>
-                            <td><?php echo date('d M, Y', strtotime($SendVisaApproval->created_at)); ?></td>
-                            <td>Send for eVisa approvals</td>
-                            <td>Sent</td>
-                        <?php 
-                        $user_name = User::where('id', $SendVisaApproval->organisation_id)->select('name')->first();
-                            ?>
-                            <td> <?php echo $user_name->name; ?> </td>
+                            <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
                     </tr>
 
+                    <?php 
+                    }
+                    ?>
+
+                    <?php 
+                    $SendProLcMol = EidProcesse::where('candidate_id', $candidate_id)->select('request_send_by', 'created_at')->orderBy('id', 'desc')->first();
+                    if(!empty($SendProLcMol)) {
+                    ?> 
+                    <tr>
+                            <td><?php echo $j++; ?></td>
+                            <td>EID Process</td>
+                            <td>Sent To PRO</td>
+                        <?php 
+                     
+                        $user_name = User::where('id', $SendProLcMol->request_send_by)->select('name')->first();
+                            ?>
+                            <td> <?php echo $user_name->name; ?> </td>
+                            <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
+                    </tr>
                     <?php
-                         
-                    $SendVisaApproval = SendVisaApproval::where('candidate_id', $results_data->id)->where('visa_approved_reject_status', '!=', 0)->select('manager_id', 'visa_approved_date', 'visa_rejected_date', 'visa_approved_reject_status')->first();
+                    }
+                    ?>
+
+                    <?php 
+                    $SendProLcMol = MedicalReport::where('candidate_id', $candidate_id)->select('created_by', 'created_at')->orderBy('id', 'desc')->first();
+                    if(!empty($SendProLcMol)) {
+                    ?> 
+                    <tr>
+                            <td><?php echo $j++; ?></td>
+                            <td>Medical Reports</td>
+                            <td>Uploaded</td>
+                        <?php 
+                        $user_name = User::where('id', $SendProLcMol->created_by)->select('name')->first();
+                            ?>
+                            <td> <?php echo $user_name->name; ?> </td>
+                            <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
+                    </tr>
+                    <?php
+                    }
+                    ?>
+
+                     <?php 
+                    $SendProLcMol = MedicalAppointment::where('candidate_id', $candidate_id)->select('created_by', 'created_at', 'place', 'appointment_time')->orderBy('id', 'desc')->first();
+                    if(!empty($SendProLcMol)) {
+                    ?> 
+                    <tr>
+                            <td><?php echo $j++; ?></td>
+                            <td>Medical Test Appointment<br>
+                            Date: <?php echo date('d M, Y, H:i', strtotime($SendProLcMol->appointment_time)); ?> <br> Place: <?php echo $SendProLcMol->place;?></td>
+                            <td>Sent</td>
+                        <?php 
+                        $user_name = User::where('id', $SendProLcMol->created_by)->select('name')->first();
+                            ?>
+                            <td> <?php echo $user_name->name; ?> </td>
+                            <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
+                    </tr>
+                    <?php
+                    }
+                    ?>
+
+                    <?php 
+                    $SendProLcMol = VisaDocument::where('candidate_id', $candidate_id)->select('created_by', 'created_at')->orderBy('id', 'desc')->first();
+                    if(!empty($SendProLcMol)) {
+                    ?> 
+                    <tr>
+                            <td><?php echo $j++; ?></td>
+                            <td>eVisa Documents</td>
+                            <td>Uploaded</td>
+                        <?php 
+                        $user_name = User::where('id', $SendProLcMol->created_by)->select('name')->first();
+                            ?>
+                            <td> <?php echo $user_name->name; ?> </td>
+                            <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
+                    </tr>
+                    <?php
+                    }
+                    ?>
+
+                    <?php 
+                    $SendProLcMol = SendProEvisaProcessing::where('candidate_id', $candidate_id)->select('created_by', 'created_at')->orderBy('id', 'desc')->first();
+                    if(!empty($SendProLcMol)) {
+                    ?> 
+                    <tr>
+                            <td><?php echo $j++; ?></td>
+                            <td>Sent PRO to eVisa Processing</td>
+                            <td>Sent</td>
+                        <?php 
+                     
+                        $user_name = User::where('id', $SendProLcMol->created_by)->select('name')->first();
+                            ?>
+                            <td> <?php echo $user_name->name; ?> </td>
+                            <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
+                    </tr>
+                    <?php
+                    }  
+                    ?>
+
+                    <?php
+                    $SendProLcMol = SignedLcMolDoc::where('candidate_id', $candidate_id)->select('created_by', 'created_at')->orderBy('id', 'desc')->first();
+                    if(!empty($SendProLcMol)) {
+                    ?> 
+                    <tr>
+                            <td><?php echo $j++; ?></td>
+                            <td>LC/MOL signed copy</td>
+                            <td>Uploaded</td>
+                        <?php 
+                        if($SendProLcMol->created_by == 'candidate'){ ?>
+                            <td>Candidate</td>
+                        <?php } else {
+                        $user_name = User::where('id', $SendProLcMol->created_by)->select('name')->first();
+                            ?>
+                            <td> <?php echo $user_name->name; ?> </td>
+                        <?php } ?>
+                        <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
+                    </tr>
+                    <?php
+                    }
+                    ?>
+
+                    <?php 
+                    $SendProLcMol = LcMolDoc::where('candidate_id', $candidate_id)->select('created_by', 'created_at')->orderBy('id', 'desc')->first();
+                    if(!empty($SendProLcMol)) {
+                    ?>
+                    <tr>
+                            <td><?php echo $j++; ?></td>
+                            <td>LC/MOL documents</td>
+                            <td>Uploaded</td>
+                        <?php 
+                        $user_name = User::where('id', $SendProLcMol->created_by)->select('name')->first();
+                            ?>
+                            <td> <?php echo $user_name->name; ?> </td>
+                            <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
+                    </tr>
+                    <?php
+                    } 
+                    ?>
+
+                    <?php
+                    $SendProLcMol = SendProLcMol::where('candidate_id', $candidate_id)->select('request_send_by', 'created_at')->first();
+                    if(!empty($SendProLcMol)) {
+                    ?>
+                    <tr>
+                            <td><?php echo $j++; ?></td>
+                            <td>Sent for LC/MOL process</td>
+                            <td>Sent</td>
+                        <?php 
+                        $user_name = User::where('id', $SendProLcMol->request_send_by)->select('name')->first();
+                            ?>
+                            <td> <?php echo $user_name->name; ?> </td>
+                            <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
+                    </tr>
+                    <?php
+                    }
+                    ?>
+
+                    <?php 
+                    $SendVisaApproval = SendVisaApproval::where('candidate_id', $candidate_id)->where('visa_approved_reject_status', '!=', 0)->select('manager_id', 'visa_approved_date', 'visa_rejected_date', 'visa_approved_reject_status')->first();
                     if(!empty($SendVisaApproval)) {
                     ?>
                     <tr>
-                            <td>4</td>
-                        <?php
-                            if($SendVisaApproval->visa_approved_reject_status == 1) {
-                        ?>
-                            <td><?php echo date('d M, Y', strtotime($SendVisaApproval->visa_approved_date)); ?></td>
-                        <?php } else { ?>
-                            <td><?php echo date('d M, Y', strtotime($SendVisaApproval->visa_rejected_date)); ?></td>
-                        <?php } ?>     
+                            <td><?php echo $j++; ?></td>    
                             <td>eVisa</td>
                         <?php
                             if($SendVisaApproval->visa_approved_reject_status == 1){
@@ -461,207 +602,87 @@ public function GetCandidateAllHiringDetails(Request $request){
                         $user_name = User::where('id', $SendVisaApproval->manager_id)->select('name')->first();
                             ?>
                             <td> <?php echo $user_name->name; ?> </td>
+                            <?php
+                            if($SendVisaApproval->visa_approved_reject_status == 1) {
+                        ?>
+                            <td><?php echo date('d M, Y', strtotime($SendVisaApproval->visa_approved_date)); ?></td>
+                        <?php } else { ?>
+                            <td><?php echo date('d M, Y', strtotime($SendVisaApproval->visa_rejected_date)); ?></td>
+                        <?php } ?> 
                     </tr>
                     <?php
-                         
-                    $SendProLcMol = SendProLcMol::where('candidate_id', $results_data->id)->select('request_send_by', 'created_at')->first();
-                    if(!empty($SendProLcMol)) {
+                    }
                     ?>
 
+                    <?php
+                    $SendVisaApproval = SendVisaApproval::where('candidate_id', $candidate_id)->select('organisation_id', 'created_at')->first();
+                    if(!empty($SendVisaApproval)) {
+                    ?>
                     <tr>
-                            <td>5</td>
-                            <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
-                            <td>Send for LC/MOL process</td>
+                            <td><?php echo $j++; ?></td>
+                            <td>Sent for eVisa approvals</td>
                             <td>Sent</td>
                         <?php 
-                        $user_name = User::where('id', $SendProLcMol->request_send_by)->select('name')->first();
+                        $user_name = User::where('id', $SendVisaApproval->organisation_id)->select('name')->first();
                             ?>
                             <td> <?php echo $user_name->name; ?> </td>
+                            <td><?php echo date('d M, Y', strtotime($SendVisaApproval->created_at)); ?></td>
                     </tr>
-
                     <?php
-                         
-                    $SendProLcMol = LcMolDoc::where('candidate_id', $results_data->id)->select('created_by', 'created_at')->orderBy('id', 'desc')->first();
-                    if(!empty($SendProLcMol)) {
+                    }
                     ?>
 
-                    <tr>
-                            <td>6</td>
-                            <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
-                            <td>LC/MOL documents</td>
+                    <?php
+                        $sign_doc = CandidateRequiredDocument::where('candidate_id', $candidate_id)->where('document_id', 6)->select('doc_upload_date', 'created_by', 'organisation_id')->first();
+                        if(!empty($sign_doc)){    
+                        ?>
+                        <tr>
+                            <td><?php echo $j++; ?></td>
+                            <td>Offer Letter Signed Copy</td>
                             <td>Uploaded</td>
                         <?php 
-                        $user_name = User::where('id', $SendProLcMol->created_by)->select('name')->first();
+                        if($sign_doc->created_by == 'HR') {
+                        $user_name = User::where('id', $sign_doc->organisation_id)->select('name')->first();
                             ?>
                             <td> <?php echo $user_name->name; ?> </td>
-                    </tr>
 
-                    <?php
-                         
-                    $SendProLcMol = SignedLcMolDoc::where('candidate_id', $results_data->id)->select('created_by', 'created_at')->orderBy('id', 'desc')->first();
-                    if(!empty($SendProLcMol)) {
-                    ?> 
-
-                    <tr>
-                            <td>7</td>
-                            <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
-                            <td>LC/MOL signed copy</td>
-                            <td>Uploaded</td>
-                        <?php 
-                        if($SendProLcMol->created_by == 'candidate'){ ?>
+                        <?php } else { ?>
                             <td>Candidate</td>
-                        <?php } else {
-                        $user_name = User::where('id', $SendProLcMol->created_by)->select('name')->first();
-                            ?>
-                            <td> <?php echo $user_name->name; ?> </td>
                         <?php } ?>
-                    </tr>
-
-
-                    <?php 
-
-                    $SendProLcMol = SendProEvisaProcessing::where('candidate_id', $results_data->id)->select('created_by', 'created_at')->orderBy('id', 'desc')->first();
-                    if(!empty($SendProLcMol)) {
-                    ?> 
-
-                    <tr>
-                            <td>8</td>
-                            <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
-                            <td>Send PRO to eVisa Processing</td>
-                            <td>Sent</td>
-                        <?php 
-                     
-                        $user_name = User::where('id', $SendProLcMol->created_by)->select('name')->first();
-                            ?>
-                            <td> <?php echo $user_name->name; ?> </td>
-                    </tr>
-
-                    <?php 
-
-                    $SendProLcMol = VisaDocument::where('candidate_id', $results_data->id)->select('created_by', 'created_at')->orderBy('id', 'desc')->first();
-                    if(!empty($SendProLcMol)) {
-                    ?> 
-
-                    <tr>
-                            <td>9</td>
-                            <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
-                            <td>eVisa Documents</td>
-                            <td>Uploaded</td>
-                        <?php 
-                     
-                        $user_name = User::where('id', $SendProLcMol->created_by)->select('name')->first();
-                            ?>
-                            <td> <?php echo $user_name->name; ?> </td>
-                    </tr>
-                    
-                    <?php 
-
-                    $SendProLcMol = MedicalAppointment::where('candidate_id', $results_data->id)->select('created_by', 'created_at', 'place', 'appointment_time')->orderBy('id', 'desc')->first();
-                    if(!empty($SendProLcMol)) {
-                    ?> 
-
-                    <tr>
-                            <td>10</td>
-                            <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
-                            <td>Medical Test Appointment</td>
-                            <td>Date: <?php echo date('d M, Y, H:i', strtotime($SendProLcMol->appointment_time)); ?> <br> Place: <?php echo $SendProLcMol->place;?> </td>
-                        <?php 
-                     
-                        $user_name = User::where('id', $SendProLcMol->created_by)->select('name')->first();
-                            ?>
-                            <td> <?php echo $user_name->name; ?> </td>
-                    </tr>
-
-                    <?php 
-
-                    $SendProLcMol = MedicalReport::where('candidate_id', $results_data->id)->select('created_by', 'created_at')->orderBy('id', 'desc')->first();
-                    if(!empty($SendProLcMol)) {
-                    ?> 
-
-                    <tr>
-                            <td>11</td>
-                            <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
-                            <td>Medical Reports</td>
-                            <td>Uploaded</td>
-                        <?php 
-                     
-                        $user_name = User::where('id', $SendProLcMol->created_by)->select('name')->first();
-                            ?>
-                            <td> <?php echo $user_name->name; ?> </td>
-                    </tr>
-
-                    <?php 
-
-                    $SendProLcMol = EidProcesse::where('candidate_id', $results_data->id)->select('request_send_by', 'created_at')->orderBy('id', 'desc')->first();
-                    if(!empty($SendProLcMol)) {
-                    ?> 
-
-                    <tr>
-                            <td>12</td>
-                            <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
-                            <td>EID Process</td>
-                            <td>Send To PRO</td>
-                        <?php 
-                     
-                        $user_name = User::where('id', $SendProLcMol->request_send_by)->select('name')->first();
-                            ?>
-                            <td> <?php echo $user_name->name; ?> </td>
-                    </tr>
-
-                    <?php 
-
-                    $SendProLcMol = EidDocument::where('candidate_id', $results_data->id)->select('created_by', 'created_at')->orderBy('id', 'desc')->first();
-                    if(!empty($SendProLcMol)) {
-                    ?> 
-
-                    <tr>
-                            <td>13</td>
-                            <td><?php echo date('d M, Y', strtotime($SendProLcMol->created_at)); ?></td>
-                            <td>EID Document</td>
-                            <td>Uploaded</td>
-                        <?php 
-                     
-                        $user_name = User::where('id', $SendProLcMol->created_by)->select('name')->first();
-                            ?>
-                            <td> <?php echo $user_name->name; ?> </td>
-                    </tr>
-
-                    <?php 
-                    }
-                    }
-                    }
-                    }
-                    }
-                    }  
-                    }
-                    } ?>
-
+                        <td><?php echo date('d M, Y', strtotime($sign_doc->doc_upload_date)); ?></td>
+                        </tr>
                     <?php
                     }
+                    ?>
+                    <?php
+                            $offer_letter_status = SendOfferLettersToCandidate::where('candidate_id', $candidate_id)->select('status', 'updated_at')->first();
+                        if($offer_letter_status){    
+                        if($offer_letter_status->status != 0) {
+                        ?>
+                        <tr>
+                            <td><?php echo $j++; ?></td>
+                            <td>Offer Letter</td>
+                            <td><?php if($offer_letter_status->status == 1){  ?> Accepted
+                            <?php } else { ?> Rejected <?php } ?></td>
+                            <td>Candidate</td>
+                            <td><?php echo date('d M, Y', strtotime($offer_letter_status->updated_at)); ?></td>
+                        </tr>
+                    <?php
+                        }
                     }
-                }
-                }
-                }
                     ?> 
-                   
-              
                         </table> 
-
-
                         </div>
-
                     </div>
                 </div>
             </div>
         <?php 
  }
 
-
-
     public function UploadOfferLetterDocument(Request $request){
     $user_id = Auth::user()->id;
     $candidate_id=$request->candidate_id;
-    $result = SendHrRequest::where(['organisation_id'=>$user_id,'id'=>$candidate_id,'hiring_status'=>'0'])->first();
+    $result = SendHrRequest::where(['id'=>$candidate_id,'hiring_status'=>'0'])->first();
     $input=$request->all();
     $images=array();
     if(!empty($result)){
@@ -704,7 +725,7 @@ public function GetCandidateAllHiringDetails(Request $request){
             $msg="Offer Letter Send Successfully.";
 
             $results = DB::table('send_hr_requests')
-            ->where(['organisation_id'=>$user_id,'id'=>$result->id])
+            ->where(['id'=>$result->id])
             ->update(['hiring_status' => '1',]);
           } else {
             $msg="Offer Letter Already Send.";
@@ -715,7 +736,7 @@ public function GetCandidateAllHiringDetails(Request $request){
     }  
 
     if(!empty($data)){
-        $updated_rec = SendOfferLettersToCandidate::where(['organisation_id'=>$user_id,'candidate_id'=>$candidate_id,'tracking_status'=>'1'])->first();
+        $updated_rec = SendOfferLettersToCandidate::where(['candidate_id'=>$candidate_id,'tracking_status'=>'1'])->first();
          if(!empty($updated_rec)){
                 $this->SendHrOfferLetterMail($updated_rec, $updated_rec->id, $attach_ments);
         }
@@ -914,7 +935,7 @@ public function UploadeVisaSendCandidate(Request $request){
     $result_ = SendProEvisaProcessing::where('candidate_id', $candidate_id)->first();
     if(!empty($result_)){
     $result = SendHrRequest::where('id', $candidate_id)->first();
-  //  dd($request);
+    //  dd($request);
     $data = '';
     $input=$request->all();
     $images=array();
@@ -1280,8 +1301,10 @@ public function SendMedicalTestAppointment(Request $request){
 
 public function SendProRequestForEidProcess(Request $request){
     $user_id = Auth::user()->id;
+
+
     $candidate_id=$request->candidate_rec_id;
-    $manager_name_id=$request->manager_name;
+    
     $comments=$request->comments;
     $result = SendHrRequest::where('id', $request->candidate_rec_id)->first();
     $date = date('Y-m-d H:i:s');
@@ -1296,20 +1319,30 @@ public function SendProRequestForEidProcess(Request $request){
     $result1 = SendHrRequest::where('id', $request->candidate_rec_id)->first();
     $result1->hiring_status = 11;
     $result1->save();
-    $user = User::where('id', $manager_name_id)->select('name', 'email')->first();
+    
 
     if(empty($get_duplicate)){  
-        $managers=User::where('id', $manager_name_id)->first(); 
-        $manager_email=$managers->email;
-        $sendvisaApproval = new EidProcesse();
-        $sendvisaApproval->request_send_by = $user_id;
-        $sendvisaApproval->candidate_id = $result->id;
-        $sendvisaApproval->pro_id = $manager_name_id;
-        $sendvisaApproval->pro_email = $user->email;
-        $sendvisaApproval->comments = $comments;
-        $data=$sendvisaApproval->save(); 
+        foreach ($request->manager_name as $manager_name) {
 
-        $msg="Details send to PRO for E-ID processing";
+            $manager_name_id = $manager_name;
+            if($request->agency == 0) {
+                $user = User::where('id', $manager_name_id)->select('name', 'email')->first();
+                $managers=User::where('id', $manager_name_id)->first(); 
+            } else {
+                $user = VanderStaff::where('id', $manager_name_id)->select('name', 'email')->first();
+                $managers= VanderStaff::where('id', $manager_name_id)->first(); 
+            }
+            $manager_email=$managers->email;
+            $sendvisaApproval = new EidProcesse();
+            $sendvisaApproval->request_send_by = $user_id;
+            $sendvisaApproval->candidate_id = $result->id;
+            $sendvisaApproval->agency = $request->agency;
+            $sendvisaApproval->pro_id = $manager_name_id;
+            $sendvisaApproval->pro_email = $user->email;
+            $sendvisaApproval->comments = $comments;
+            $data=$sendvisaApproval->save(); 
+            $msg="Details send to PRO for E-ID processing";
+        }
       } 
       else {
         $msg="Already Details send for E-ID processing.";
@@ -1321,9 +1354,18 @@ public function SendProRequestForEidProcess(Request $request){
             $getdata = EidProcesse::where('candidate_id', $candidate_id)->first();
         if(!empty($getdata)) {
 
+
         $position = PositionMaster::where('id', $pos_id)->select('position_name')->first();
-         
         $candidate_id = \encrypt($candidate_id);
+
+        foreach ($request->manager_name as $manager_name) {
+        
+        if($request->agency == 0) {
+                $user = User::where('id', $manager_name)->select('name', 'email')->first();
+            } else {
+                $user= VanderStaff::where('id', $manager_name)->select('name', 'email')->first(); 
+        }
+
         $template_data = [
             'managername'   => $user->name,
             'name'          => $result->candidate_name,
@@ -1332,13 +1374,15 @@ public function SendProRequestForEidProcess(Request $request){
             'position_name' => $position->position_name,
         ];
 
+
         $email = $user->email;
 
-    Mail::send(['html'=>'email.eid_process_request'], $template_data,
-        function ($message) use ($email,$template_data) {
-            $message->to($email)->from("lnxx@gmail.com")->subject('E-ID Process Request of' .$template_data['name']);
-    });
+        Mail::send(['html'=>'email.eid_process_request'], $template_data,
+            function ($message) use ($email,$template_data) {
+                $message->to($email)->from("lnxx@gmail.com")->subject('E-ID Process Request of' .$template_data['name']);
+        });
 
+        }
 
         } else{
             $msg='Something went wrong';
@@ -1358,42 +1402,42 @@ public function SendProRequestForEidProcess(Request $request){
 public function SendProRequestForEvisaProcess(Request $request){
     $user_id = Auth::user()->id;
     $candidate_id=$request->candidate_rec_id;
-    $manager_name_id=$request->manager_name;
+
     $comments=$request->comments;
     $result = SendHrRequest::where('id', $request->candidate_rec_id)->first();
     $date = date('Y-m-d H:i:s');
     $data = '';
     
     if(!empty($result)){  
-    $get_duplicate = SendProEvisaProcessing::where('candidate_id', $candidate_id)->first(); 
-    $pos_id = $result->candidate_position_id;
+        $get_duplicate = SendProEvisaProcessing::where('candidate_id', $candidate_id)->first(); 
+        $pos_id = $result->candidate_position_id;
+        $result1 = SendHrRequest::where('id', $request->candidate_rec_id)->first();
+        $result1->hiring_status = 9;
+        $result1->save();
 
-    $result1 = SendHrRequest::where('id', $request->candidate_rec_id)->first();
-    $result1->hiring_status = 9;
-    $result1->save();
-
-
-    if(empty($get_duplicate)){  
-        $managers=User::where('id', $manager_name_id)->first(); 
-        $manager_email=$managers->email;
-        $sendvisaApproval = new SendProEvisaProcessing();
-        $sendvisaApproval->created_by = $user_id;
-        $sendvisaApproval->candidate_id = $result->id;
-        $sendvisaApproval->pro_id = $manager_name_id;
-        $sendvisaApproval->comments = $comments;
-        $sendvisaApproval->status  =  0;
-        $data=$sendvisaApproval->save(); 
-        $msg="Details send to PRO for eVisa processing";
-      } 
-      else {
-        $msg="Already Details send for eVisa processing.";
-        $data='';
-      }         
-
+        if(empty($get_duplicate)){  
+            foreach ($request->manager_name as $manager_name) {
+                $manager_name_id=$manager_name;
+                $managers=User::where('id', $manager_name_id)->first(); 
+                $manager_email=$managers->email;
+                $sendvisaApproval = new SendProEvisaProcessing();
+                $sendvisaApproval->created_by = $user_id;
+                $sendvisaApproval->agency = $request->agency;
+                $sendvisaApproval->candidate_id = $result->id;
+                $sendvisaApproval->pro_id = $manager_name_id;
+                $sendvisaApproval->comments = $comments;
+                $sendvisaApproval->status =  0;
+                $data=$sendvisaApproval->save(); 
+                $msg="Details send to PRO for eVisa processing";
+            }
+        } else {
+            $msg="Already Details send for eVisa processing.";
+            $data='';
+        }         
     }
 
     if(!empty($data)){
-            $getdata = SendProEvisaProcessing::where('candidate_id', $candidate_id)->first();
+            $getdata = SendProEvisaProcessing::where('candidate_id', $candidate_id)->get();
         if(!empty($getdata)) {
             $this->SendProeVisaProcessMail($getdata, $pos_id, $manager_email, $result->candidate_name);
         }else{
@@ -1408,13 +1452,22 @@ public function SendProRequestForEvisaProcess(Request $request){
 
 public function SendProeVisaProcessMail($data, $pos_id, $email, $candidate_name){
     $user_id = Auth::user()->id;
-    $email = $email;
-    $managers = User::where('id', $data->pro_id)->first(); 
+    try {
+     
+    foreach ($data as $data) {
+
+    if($data->agency == 0) {
+        $managers = User::where('id', $data->pro_id)->first(); 
+    } else {
+        $managers = VanderStaff::where('id', $data->pro_id)->first(); 
+    }
+    
+
+    $email = $managers->email;
     $manager_name = $managers->name;
     $rec_id = $data->id;
     $candidate_id = \encrypt($data->candidate_id);
-    try {
-
+   
     $position = PositionMaster::where('id', $pos_id)->select('position_name')->first(); 
     $template_data = [
         'managername'   => $manager_name,
@@ -1428,6 +1481,8 @@ public function SendProeVisaProcessMail($data, $pos_id, $email, $candidate_name)
         function ($message) use ($email,$template_data) {
             $message->to($email)->from("lnxx@gmail.com")->subject('eVisa Process Request of' .$template_data['name']);
     }); 
+
+    }
     return true;
     } catch (Exception $ex) {
     return false;
@@ -1452,27 +1507,37 @@ public function SendProRequestForLcMol(Request $request){
     $result1->save();
 
     if(empty($get_duplicate)){  
-        $managers=User::where('id', $manager_name_id)->first(); 
-        $manager_email=$managers->email;
-        $sendvisaApproval = new SendProLcMol();
-        $sendvisaApproval->request_send_by = $user_id;
-        $sendvisaApproval->candidate_id = $result->id;
-        $sendvisaApproval->candidate_name = $result->candidate_name;
-        $sendvisaApproval->pro_id = $manager_name_id;
-        $sendvisaApproval->pro_email = $manager_email;
-        $sendvisaApproval->comments = $comments;
-        $sendvisaApproval->status  =  0;
-        $data=$sendvisaApproval->save(); 
-        $msg="Details send to PRO for LC/MOL process.";
-      } 
-      else {
+
+        foreach ($request->manager_name as $manager) {
+            if($request->agency == 0){
+                $managers = User::where('id', $manager)->first(); 
+            } else {
+                $managers = VanderStaff::where('id', $manager)->first();
+            }
+            $manager_email=$managers->email;
+            $sendvisaApproval = new SendProLcMol();
+            $sendvisaApproval->request_send_by = $user_id;
+            $sendvisaApproval->candidate_id = $result->id;
+            $sendvisaApproval->agency = $request->agency;
+            $sendvisaApproval->candidate_name = $result->candidate_name;
+            $sendvisaApproval->pro_id = $manager;
+            $sendvisaApproval->pro_email = $manager_email;
+            $sendvisaApproval->comments = $comments;
+            $sendvisaApproval->status  =  0;
+            $data=$sendvisaApproval->save(); 
+
+            $msg="Details send to PRO for LC/MOL process.";
+
+        } 
+
+      }  else {
         $msg="Already Details send for LC/MOL process.";
         $data='';
       }         
 
     }  
       if(!empty($data)){
-            $getdata = SendProLcMol::where('candidate_id', $candidate_id)->first();
+            $getdata = SendProLcMol::where('candidate_id', $candidate_id)->get();
         if(!empty($getdata)) {
             $this->SendProLcMolMail($getdata, $pos_id);
         }else{
@@ -1549,13 +1614,19 @@ public function UploadDocumentForVisaApproval(Request $request){
 
 
 public function SendProLcMolMail($data, $pos_id){
+    try {
     $user_id = Auth::user()->id;
+    foreach($data as $data) {
     $email = array($data->pro_email);
-    $managers = User::where('id', $data->pro_id)->first(); 
+    if($data->agency == 0){
+        $managers = User::where('id', $data->pro_id)->first(); 
+    } else {
+        $managers = VanderStaff::where('id', $data->pro_id)->first();
+    }
     $manager_name = $managers->name;
     $rec_id = $data->id;
     $candidate_id = \encrypt($data->candidate_id);
-    try {
+    
 
     $position = PositionMaster::where('id', $pos_id)->select('position_name')->first(); 
     $template_data = [
@@ -1570,6 +1641,8 @@ public function SendProLcMolMail($data, $pos_id){
         function ($message) use ($email,$template_data) {
             $message->to($email)->from("lnxx@gmail.com")->subject('LC/MOL Process Request of' .$template_data['name']);
     }); 
+    }
+
     return true;
     } catch (Exception $ex) {
     return false;
@@ -2176,6 +2249,21 @@ public function SendeVisaApprovalMail($data, $pos_id){
         $data = DB::select('SELECT a.project_name,a.task_master,a.start_date,a.end_date,a.id,a.status,b.office_name,c.department_name FROM `project_masters` AS a INNER JOIN office_masters AS b ON a.office_id=b.id INNER JOIN department_masters AS c ON a.department_id=c.id WHERE a.orgnization_id='.$user_id.' ORDER BY a.id DESC');
         return response()->json(['status'=>200,'data' => $data]);
     }
+
+    public function getVanderList(){
+        $user_id = Auth::user()->id;
+        $data = DB::select('SELECT a.name,a.address,a.id,a.status FROM `vanders` AS a ORDER BY a.id DESC');
+        return response()->json(['status'=>200,'data' => $data]);
+    }
+
+    public function getVanderStaffList(){
+        $user_id = Auth::user()->id;
+        $data = DB::select('SELECT a.name,a.email,a.mobile,a.id,b.name as vander_name,a.status FROM `vander_staffs` AS a INNER JOIN vanders AS b ON a.vander_id=b.id ORDER BY a.id DESC');
+        return response()->json(['status'=>200,'data' => $data]);
+    }
+    
+    
+
     public function ViewEmpTimesheet(Request $request){
         $user_id = Auth::user()->id;
 
@@ -2599,6 +2687,33 @@ public function SendeVisaApprovalMail($data, $pos_id){
             return response()->json(['status'=>400,'data'=>'']);
         }
     }
+    
+    public function GetStatusVander(Request $request){
+        $user_id = Auth::user()->id;
+        $data = Vander::select('id', 'status')->where('id',$request->id)->first();
+        $data->status = $request->status;
+        $data->save();
+        if(!empty($data)){
+            return response()->json(['status'=>200,'data'=>$data]);
+        }else{
+            return response()->json(['status'=>400,'data'=>'']);
+        }
+    }
+
+    public function getVanderStaffStatus(Request $request){
+        $user_id = Auth::user()->id;
+        $data = VanderStaff::select('id', 'status')->where('id',$request->id)->first();
+        $data->status = $request->status;
+        $data->save();
+        if(!empty($data)){
+            return response()->json(['status'=>200,'data'=>$data]);
+        }else{
+            return response()->json(['status'=>400,'data'=>'']);
+        }
+    }
+    
+    
+
     public function GetAssignTask(Request $request){
         $user_id = Auth::user()->id;
 
@@ -3710,7 +3825,7 @@ public function GetDailyAttendence(){// echo "vikas"; die;
         $rec_id=$data->id;
         $organisation_id=$data->organisation_id;
         $candidate_id=$data->candidate_id;    
-        $positions = PositionMaster::select('position_name')->where(['orgnization_id'=>$user_id,'id'=>$data->id])->first();
+        $positions = PositionMaster::select('position_name')->where(['id'=>$data->position])->first();
         try {
             $template_data = [
                 'name'           => $data->name,

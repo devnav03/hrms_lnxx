@@ -58,7 +58,11 @@ class EmpController extends Controller
         $form_category = FormEngineCategory::select('id','name','is_multiple')->where(['id'=>$from_cat_id])->first();
         $form_engine = DB::select("SELECT a.id,b.form_name,b.form_column,b.master_table,a.is_required,b.data_type,b.data_length,b.pattern,b.get_where,b.form_column_id FROM `map_form_orgs` as a INNER JOIN form_engines as b on a.form_name=b.form_column WHERE organisation_id=$user_data->id AND b.form_category_id=$from_cat_id ORDER BY b.id ASC");
         $employee_info = EmployeeInfo::select('update_data')->where('from_cat_id',$form_category->id)->where('user_id',$emp_code)->first();
-        return view('organization.employee.update_emp',compact('organisation','emp_code','form_category','form_engine','user_data','employee_info'));
+
+        $user_in = User::where('id', $emp_code)->select('salary')->first();
+        $shift_in = EmployeeInfo::where('user_id', $emp_code)->where('employee_code', '!=', NULL)->select('shift_id')->first();
+
+        return view('organization.employee.update_emp',compact('organisation','emp_code','form_category','form_engine','user_data','employee_info', 'user_in', 'shift_in'));
     }
     public function AddEmployee(Request $request){
         // print_r($_POST);
@@ -164,98 +168,12 @@ class EmpController extends Controller
                     $empdocument->save();
                 }
             }
-
-            $image_data = '';
-            if(isset($request->profile)){
-                $image_data = $request->profile;
-            }
-
-            $refer_code = $employee->id;
-            $all_data['name'] = $request->first_name.' '.$request->last_name;
-            $all_data['email'] = $request->email;
-            $all_data['mobile'] = $request->mobile;
-
-            $add_face_chk = $this->sendFaceCheck($all_data,$refer_code,$image_data);
-            $res=$this->sendFaceCheckAlotte($refer_code);
-
+            
             return redirect('add-employees')->with('success','Saved successfuly');
         }
         $organisation = Organisation::where(['user_id'=>Auth::user()->id])->first();
         return view('organization.employee.add_employee_details',compact('organisation','state','source_name','notice_period','education_name','bank_name','designation_name'));
     }
-
-
-    function sendFaceCheck($all_data,$visitor_id,$image_data){
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => 'https://ams.facer.in/api/public/employee/add',
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 0,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS =>'{
-          "office_name": "H1",
-          "department_name": "Visitor",
-          "shift_name": "Morning",
-          "employee_name": "'.$all_data['name'].'",
-          "employee_id": "'.$visitor_id.'",
-          "employee_gender": "Male",
-          "employee_image": "'.$image_data.'",
-          "employee_email": "'.$all_data['email'].'",
-          "employee_contact_number": "'.$all_data['mobile'].'",
-          "contract_type": "PERMANENT",
-          "overtime": "30",
-          "status": "ACTIVE",
-        }',
-          CURLOPT_HTTPHEADER => array(
-            'Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiJzYW10ZWNoLmFkbWluIiwidHlwZV9vZl91c2VyIjoiQURNSU4iLCJ0b2tlbiI6IiQyYSQwOCQ5SUY1UFV6cGh0bWVRTzJtVWtOdU8ucnU5VUhFaGc4OEtxM3QzMVVxR0VvR2NZR3BnU0VDVyIsImlhdCI6MTY0NTE2MDIzMX0.KGAyVEivIQ6Fncg8JPmlwNZfkBwNcPaTJCNj5wKruR8',
-            'Content-Type: text/plain'
-          ),
-        ));
-        $response = curl_exec($curl);
-        curl_close($curl);
-        return json_decode($response,true);
-    }
-    
-    
-    function sendFaceCheckAlotte($employee_id){
-    $devices=$this->getDeviceAllocateUser($employee_id);
-    $devices_name=json_encode($devices);
-    $curl = curl_init();
-    curl_setopt_array($curl, array(
-      CURLOPT_URL => 'https://ams.facer.in/api/public/employee/allot',
-      CURLOPT_RETURNTRANSFER => true,
-      CURLOPT_ENCODING => '',
-      CURLOPT_MAXREDIRS => 10,
-      CURLOPT_TIMEOUT => 0,
-      CURLOPT_FOLLOWLOCATION => true,
-      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-      CURLOPT_CUSTOMREQUEST => 'POST',
-      CURLOPT_POSTFIELDS =>'{
-        "employee_id": "'.$employee_id.'",
-        "allotments": '.$devices_name.'
-      }',
-       CURLOPT_HTTPHEADER => array(
-         'Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiJzYW10ZWNoLmFkbWluIiwidHlwZV9vZl91c2VyIjoiQURNSU4iLCJ0b2tlbiI6IiQyYSQwOCQ5SUY1UFV6cGh0bWVRTzJtVWtOdU8ucnU5VUhFaGc4OEtxM3QzMVVxR0VvR2NZR3BnU0VDVyIsImlhdCI6MTY0NTE2MTM4OH0.CRMT7l4iA-Oi0CkxMeemnlsxQJjQI4PPqZDb1jpiKTE',
-         'Content-Type: text/plain'
-       ),
-     ));
-    $response = curl_exec($curl);
-    curl_close($curl);
-    return json_decode($response, true);
-    }
-    public function getDeviceAllocateUser($user_id){
-        $device_details=[];
-        $device_details[$key]['device_name'] = 'Shailers Solution Private Limited';
-        $device_details[$key]['office_name'] = '7 Inch 1810584';
-        return $device_details;
-    }
-  
-
-
     public function SendRegisterMail($data){
         $email = $data->email;
         try {
@@ -263,7 +181,7 @@ class EmpController extends Controller
             $template_data = ['email' => $data->email, 'name' => $data->first_name.' '.$data->last_name,'password'=>$data->password,'user_name'=>$orgnisation->user_name];
             Mail::send(['html'=>'email.account_registration'], $template_data,
                 function ($message) use ($email) {
-                    $message->to($email)->from('dipanshu.roy68@gmail.com')->subject('Account registration');
+                    $message->to($email)->from('vikas@shailersolutions.com')->subject('Account registration');
             });
             return true;
         } catch (Exception $ex) {

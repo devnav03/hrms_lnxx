@@ -117,7 +117,7 @@ class ApiController extends Controller
                     if($usersdata->lnxx_login == 1){
                         $setuser['lnxx_login'] = $usersdata->lnxx_login;
                     } else {
-                        $setuser['lnxx_login'] = 0;
+                        $setuser['lnxx_login'] = "0";
                     }
                     $emp = EmployeeInfo::where('user_id', $user->id)->where('from_cat_id', 1)->select('update_data')->first();
                     $obj = json_decode($emp->update_data);
@@ -174,6 +174,28 @@ class ApiController extends Controller
 
         }
     }
+
+    public function EmployeeTodayAttendance(Request $request){
+        $date = date('Y-m-d');
+        $data = [];
+        $attendances = EmpAttendance::whereRaw('date_format(created_at,"%Y-%m-%d")'."='".$date . "'")->select('in_time', 'out_time', 'total_time', 'user_id')->get();
+        if(count($attendances) != 0){
+            foreach ($attendances as $attendance) {
+                $row['id'] = $attendance->user_id;
+                $user = User::where('id', $attendance->user_id)->select('name')->first();
+                $row['name'] = $user->name;
+                $user = EmployeeInfo::where('user_id', $attendance->user_id)->where('employee_code', '!=', NULL)->select('employee_code')->first();
+                $row['employee_code'] = $user->employee_code;
+                $row['in_time'] = $attendance->in_time;
+                $row['out_time'] = $attendance->out_time;
+                $row['total_time'] = $attendance->total_time;
+                $data[] = $row;
+            }
+        }
+        return response()->json(['success' => true, 'status' => 200, 'data'=> $data]);
+    }
+
+
     private function generateApiKey() {
         return md5(uniqid(rand(), true));
     }
@@ -218,15 +240,15 @@ class ApiController extends Controller
             $user_id = $user->id;
             $dt = date('Y-m-d');
             $leave = Leave::where('id', $request->leave_id)->where('user_id', $user_id)->select('start_date')->first();
-            if($dt < $leave->start_date) {
+            // if($dt < $leave->start_date) {
             $leaves = Leave::where('id', $request->leave_id)->where('user_id', $user_id)->first();
             $leaves->status = 'Canceled';
             $leaves->updated_by = $user_id;
             $leaves->save();
             return response()->json(['success' => true, 'status' => 200, 'message'=> 'Leave  successfully withdraw']);
-        } else {
-            return response()->json(['success' => false, 'status' => 201, 'message'=> 'Stipulated time for cancellation of leave request is over. Now you can not cancel your leave application.']);
-        }
+        // } else {
+        //     return response()->json(['success' => false, 'status' => 201, 'message'=> 'Stipulated time for cancellation of leave request is over. Now you can not cancel your leave application.']);
+        // }
         }
     }
 
@@ -418,8 +440,16 @@ class ApiController extends Controller
         if($user){
             $user_id = $user->id;
             $data = DB::select("SELECT a.id,a.start_date,a.end_date,a.duration,a.reason_for_leav_comp,a.status,b.name,a.created_at FROM `leaves` as a INNER JOIN leave_types as b on a.leave_type=b.id WHERE a.user_id=$user_id AND a.id=$request->leave_id");
+            
+           // $day = date('Y-m-d');
 
-            return response()->json(['success' => true, 'status' => 200, 'data'=> $data]);
+            // if($day < $data->start_date) {
+            //     $cancel = 1;
+            // } else {
+            //     $cancel = 0;
+            // }
+
+            return response()->json(['success' => true, 'status' => 200, 'data'=> $data ]);
         }
     }
 
@@ -427,9 +457,7 @@ class ApiController extends Controller
         $user = User::where('remember_token', $request->api_key)->select('id', 'organisation_id')->first();
         if($user){
             $user_id = $user->id;
-
             $data = [];
-            
             if(isset($request->days)){
                
             $date = \Carbon\Carbon::today()->subDays($request->days);
@@ -450,11 +478,41 @@ class ApiController extends Controller
                         ->where('leaves.user_id', $user_id)->get();
 
             }
-
-            // $data = DB::select("SELECT a.id,a.start_date,a.end_date,a.duration,a.reason_for_leav_comp,a.status,b.name FROM `leaves` as a INNER JOIN leave_types as b on a.leave_type=b.id WHERE a.user_id=$user_id ORDER BY a.id DESC");
-
+            $data12 = [];
+            if(count($data) != 0 ){
+                $day = date('Y-m-d');
+                $day = date('Y-m-d', strtotime($day . '-1 days'));
+                foreach ($data as $dt) {
+                    $slide['id'] = $dt->id;
+                    $slide['start_date'] = $dt->start_date;
+                    $slide['end_date'] = $dt->end_date;
+                    $slide['duration'] = $dt->duration;
+                    $slide['reason_for_leav_comp'] = $dt->reason_for_leav_comp;
+                    $slide['status'] = $dt->status;
+                    $slide['name'] = $dt->name;
+                    $slide['created_at'] = date('M d, Y', strtotime($dt->created_at));
+                    if($dt->status == 'Approved'){
+                        if($day < $dt->start_date) {
+                            $slide['cancel'] = 1;
+                        } else {
+                            $slide['cancel'] = 0;
+                        }
+                    } else {
+                        if($dt->status == 'Canceled'){
+                           $slide['cancel'] = 0;
+                        } else {
+                            if($day < $dt->start_date) { 
+                                $slide['cancel'] = 1;
+                            } else {
+                                $slide['cancel'] = 0;
+                            }
+                        }
+                    }
+                    $data12[] = $slide;
+                }
+            }
             
-           return response()->json(['success' => true, 'status' => 200, 'data'=> $data]);
+           return response()->json(['success' => true, 'status' => 200, 'data'=> $data12]);
         }
     }
 
@@ -476,7 +534,15 @@ class ApiController extends Controller
                     $rows->totalleave = $rows->total_leave;
                 }
                 $leave_type[] = $rows;
-            }  
+            }
+
+        $new_names = '';
+        if($files=$request->file('document')){ 
+            $newfilename = rand(100000, 999999);
+            $name=$files->getClientOriginalName();
+            $new_names='leave_doc_'.$newfilename.'_'.$name;
+            $files->move('public/uploads/leave_doc',$new_names);        
+        }  
 
             $takeLeave = new Leave();
             $takeLeave->user_id = $user->id;
@@ -487,6 +553,7 @@ class ApiController extends Controller
             $takeLeave->duration = $request->duration;
             $takeLeave->leave_type = $request->leave_type;
             $takeLeave->reason_for_leav_comp = $request->reason_for_leav_comp;
+            $takeLeave->document = $new_names;
             $takeLeave->save();
             $approvers = $this->Approvers($user,$takeLeave);
             if(!empty($approvers)){
@@ -495,7 +562,7 @@ class ApiController extends Controller
                 }
             }
 
-            return response()->json(['success' => true, 'status' => 200, 'message'=> 'Successfully apply for leave']); 
+            return response()->json(['success' => true, 'status' => 200, 'message'=> 'Leave successfully applied']); 
         }
     }
 
@@ -633,6 +700,25 @@ class ApiController extends Controller
         }
     }
 
+    public function employee_list(Request $request){
+        $emp = EmployeeInfo::where('from_cat_id', 1)->select('update_data', 'user_id')->get();
+        $data = [];
+        $url = route('get-started');
+        if(count($emp) != 0){
+            foreach ($emp as  $value) {
+                $obj = json_decode($value->update_data);
+                if(isset($obj->profile)){
+                    if($obj->profile != ''){
+                       $setuser['profile'] = $url.'/'.$obj->profile; 
+                       $setuser['user_id'] = $value->user_id;
+                       $data[] = $setuser;
+                    }    
+                } 
+            }
+        }
+        return response()->json(['success' => true, 'status' => 200, 'data'=> $data]);
+    }
+
     public function push_notification_list(Request $request){
         $user = User::where('remember_token', $request->token)->select('id')->first();
         if($user){
@@ -698,25 +784,19 @@ class ApiController extends Controller
     }
     
 
-    public function MarkAttendance(Request $request){
-        // $this->ValidIn($request,['token','snapshot','latitude','longitude']);
-        $user = User::select('id', 'name', 'shift_id')->where('remember_token', $request->token)->first();
+    public function employee_mark_attendance(Request $request){
+
+        $user = User::select('id', 'name', 'shift_id')->where('id', $request->user_id)->first();
         
         if(!empty($user)){
             $date = date('Y-m-d');
             $curren_time = date('H:i:s');
             $user_id = $user->id;
 
-            // if($request->hasFile('snapshot')){
-                // $imageName = str_replace(' ', '_', $user->name).'_'.$user_id.'.'.$request->snapshot->extension();
-
-                 $imageName = 'attach_' . time() . '.png';
-               // $request->snapshot->move(public_path('employee/attendance'),$imageName);
+                $imageName = 'attach_' . time() . '.png';
                 file_put_contents(public_path().'/employee/attendance/'.$imageName, base64_decode($request->snapshot));
-            // }
 
             if(empty($request->latitude) && empty($request->longitude)){
-               // return response()->json(['status'=>400,'message'=>'Please Turn On Your Location']);
                 return response()->json(['success' => false, 'status' => 201, 'message'=>'Please Turn On Your Location']);
                 exit;
             }
@@ -731,7 +811,6 @@ class ApiController extends Controller
                 $emp_attendance->out_longitude = $request->longitude;
                 $emp_attendance->total_time = $attendance[0]->totaltime;
                 $emp_attendance->save();
-                // return response()->json(['status'=>200,'message'=>'Successfully Attancdance Marked Out']);
                 return response()->json(['success' => true, 'status' => 200, 'message'=>'Successfully Attendance Marked Out']);
             } else {
                 $shift = ShiftDuration::where('shift_id', $user->shift_id)->select('in_time_relaxation', 'out_time_relaxation')->first();
@@ -746,9 +825,55 @@ class ApiController extends Controller
                 $emp_attendance->end_date = @$shift->out_time_relaxation; 
                 $emp_attendance->save();
 
-                // $reporting = $this->GetReportingUser($user_id);
-                // $this->SendAttendanceMail($user,$reporting);
-                // return response()->json(['status'=>200,'message'=>'Successfully Attancdance Marked In']);
+                return response()->json(['success' => true, 'status' => 200, 'message'=>'Successfully Attendance Marked In']);
+            }
+        } else {
+            $response = ["status"=>422,"message" =>"User not found","data"=>null];
+            return response()->json($response);
+        }
+    }
+
+
+    public function MarkAttendance(Request $request){
+    
+        $user = User::select('id', 'name', 'shift_id')->where('remember_token', $request->token)->first();
+        
+        if(!empty($user)){
+            $date = date('Y-m-d');
+            $curren_time = date('H:i:s');
+            $user_id = $user->id;
+
+                $imageName = 'attach_' . time() . '.png';
+                file_put_contents(public_path().'/employee/attendance/'.$imageName, base64_decode($request->snapshot));
+
+            if(empty($request->latitude) && empty($request->longitude)){
+                return response()->json(['success' => false, 'status' => 201, 'message'=>'Please Turn On Your Location']);
+                exit;
+            }
+            $attendance = DB::select("SELECT id,TIMEDIFF('$curren_time',in_time) as totaltime from `emp_attendances` WHERE DATE(created_at) = '$date' AND user_id=$user_id LIMIT 1");
+            if(!empty($attendance[0])){
+                
+                $emp_attendance = EmpAttendance::where(['id'=>$attendance[0]->id])->first();
+                $emp_attendance->user_id = $user_id;
+                $emp_attendance->out_time = $curren_time;
+                $emp_attendance->out_image = $imageName;
+                $emp_attendance->out_latitude = $request->latitude;
+                $emp_attendance->out_longitude = $request->longitude;
+                $emp_attendance->total_time = $attendance[0]->totaltime;
+                $emp_attendance->save();
+                return response()->json(['success' => true, 'status' => 200, 'message'=>'Successfully Attendance Marked Out']);
+            } else {
+                $shift = ShiftDuration::where('shift_id', $user->shift_id)->select('in_time_relaxation', 'out_time_relaxation')->first();
+
+                $emp_attendance = new EmpAttendance();
+                $emp_attendance->user_id = $user_id; 
+                $emp_attendance->in_time = $curren_time;
+                $emp_attendance->in_image = $imageName;
+                $emp_attendance->in_latitude = $request->latitude;
+                $emp_attendance->in_longitude = $request->longitude;
+                $emp_attendance->start_date = @$shift->in_time_relaxation;  
+                $emp_attendance->end_date = @$shift->out_time_relaxation; 
+                $emp_attendance->save();
 
                 return response()->json(['success' => true, 'status' => 200, 'message'=>'Successfully Attendance Marked In']);
             }

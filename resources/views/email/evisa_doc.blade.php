@@ -11,12 +11,9 @@
 <div style="width:100%;border:1px solid grey">
         <div style="background:#f7f0f0;padding:20px">
             <p>Dear <b>{{$name}}</b>,<br/> 
-            Your eVisa documents successfully uploaded.<br><br>Kindly find the attachment
+            Your eVisa documents successfully created.<br><br>Kindly find the attachment
         </p>
-             
-             </br>
-    
-
+        </br>
         </div>
         <div style="padding-left:20px;padding-right:20px">
            

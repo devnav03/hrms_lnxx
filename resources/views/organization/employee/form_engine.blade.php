@@ -1,7 +1,7 @@
 @php $form_engine = DB::select("SELECT a.id,b.form_name,b.form_column,b.master_table,a.is_required,b.data_type,b.data_length,b.pattern,b.get_where,b.form_column_id FROM `map_form_orgs` as a INNER JOIN form_engines as b on a.form_name=b.form_column WHERE organisation_id=$user_id AND b.form_category_id=$row1->id AND b.group_name='$groups->group_name' ORDER BY b.order_id ASC");@endphp
 @if(!empty($form_engine))
     @foreach($form_engine as $row)
-
+       
         @if(!empty($row->master_table))
         <div class="col-sm-3">
             <div class="form-group">
@@ -68,27 +68,36 @@
                 </select>
             </div>
         </div>
-          @if($row->form_name == 'Designation')
+        @if($row->form_name == 'Designation')
         <div class="col-sm-3">
             <div class="form-group">
-              <label style="margin-bottom: 0.5rem;">* Shift Name</label>
-              <div class="help-block alert" style="padding: 0px;font-size: 12px;"></div>
-              @php $user_id = Auth::user()->id;@endphp
-              @php 
-              $shifts_result= DB::select("SELECT `id`,`shift_name` FROM `shift_masters` WHERE orgnization_id=$user_id");
-              @endphp 
-              <select class="form-control" style="width:100%" id="shift_id" name="shift_id" required>
-                <option>Select Shift</option>
-                @if(!empty($shifts_result))
-                @foreach($shifts_result as $shifts_data)
-                <option value="{{$shifts_data->id}}">{{$shifts_data->shift_name}}</option>
-                @endforeach
-                @endif
-              </select>
+                <label style="margin-bottom: 0.5rem;">Shift Name *</label>
+                <div class="help-block alert" style="padding: 0px;font-size: 12px;"></div>
+                    @php $user_id = Auth::user()->id; @endphp
+                    @php 
+                    $shifts_result= DB::select("SELECT `id`,`shift_name` FROM `shift_masters` WHERE orgnization_id=$user_id");
+                    @endphp 
+                    <select class="form-control" style="width:100%" id="shift_id" name="shift_id" required>
+                        <option>Select Shift</option>
+                        @if(!empty($shifts_result))
+                            @foreach($shifts_result as $shifts_data)
+                                <option value="{{$shifts_data->id}}">{{$shifts_data->shift_name}}</option>
+                            @endforeach
+                        @endif
+                    </select>
             </div>
         </div>
-        @endif
 
+        <div class="col-sm-3">
+            <div class="form-group">
+                <label style="margin-bottom: 0.5rem;">Monthly Salary *</label>
+                <div class="help-block alert" style="padding: 0px;font-size: 12px;"></div> 
+                    <input type="number" placeholder="Salary" class="form-control" style="width:100%" id="salary" name="salary" required>
+                     
+            </div>
+        </div>
+
+        @endif
         @else
         <?php 
             $emp_info = App\Models\User::select('id')->where('type',2)->orderBy('id', 'desc')->first();

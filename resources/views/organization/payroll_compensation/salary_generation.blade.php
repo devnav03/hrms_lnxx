@@ -60,7 +60,9 @@
                 </div>
             </div>
         </div>
-
+        
+        <form method="post" action="{{ route('view-salary-slip') }}">
+        {{ csrf_field() }}    
         <div class="row">
             <div class="col-12 stretch-card">
                 <div class="card">
@@ -72,47 +74,82 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <table id="examples" class="display" style="width:100%">
+                        <table id="examples_salary" class="display" style="width:100%">
                             <thead>
                                 <tr>
-                                    <th>S.No</th>
+                                    <th style="text-align: center;">S.No</th>
                                     <th>Emp Code</th>
                                     <th>Emp Name</th>
                                     <th>Designation</th>
                                     <th>Salary</th>
-                                    <th>Attendance</th>
-                                    <th>Absent</th>
-                                    <th>No. of Leave</th>
-                                    <th>Incentive</th>
-                                    <th>Bonus</th>
+                                    <th style="text-align: center;">Attendance</th>
+                                    <th style="text-align: center;">Absent</th>
+                                    <th style="text-align: center;">No. of Leave</th>
+                                    <th style="text-align: center;">Incentive</th>
+                                    <th style="text-align: center;">Bonus</th>
                                 </tr>
                             </thead>
                             <tbody id="">
-                                <tr>
-                                    <td>1</td>
-                                    <td>LNXX0079</td>
-                                    <td>Ashutosh Pathak</td>
-                                    <td>Web Developer</td>
-                                    <td>10000</td>
-                                    <td></td>
-                                    <td>No</td>
-                                    <td>12</td>
-                                    <td><input type="text" name="incentive" class="form-control" style="height:40%;width:70%"></td>
-                                    <td><input type="text" name="bonus" class="form-control" style="height:40%;width:70%"></td>
-                                </tr>
+                                @php
+                                $i = 0;
+                                $count = 0;
+                                if(isset($month_filter)) {
+                                $old_date = $year_filter.'-'.$month_filter;
+                                @endphp
+                                <input type="hidden" name="month_year" value="{{ $old_date }}">
+                                @php
+                                } else {
+                                $old_date = date('Y-m');
+                                @endphp
+                                <input type="hidden" name="month_year" value="{{ $old_date }}">
+                                @php
+                                }
+                                @endphp
+
+                                @foreach($users as $user)
+                                @php
+                                    $i++;
+                                if(isset($month_filter)) {
+                                $get_attendance = get_attendance($month_filter, $year_filter, $user->id);
                                 
-                                <tr>
-                                    <td>1</td>
-                                    <td>LNXX0080</td>
-                                    <td>Dipanshu Roy</td>
-                                    <td>Web Developer</td>
-                                    <td>20000</td>
-                                    <td></td>
-                                    <td>No</td>
-                                    <td>12</td>
-                                    <td><input type="text" name="incentive" class="form-control" style="height:40%;width:70%"></td>
-                                    <td><input type="text" name="bonus" class="form-control" style="height:40%;width:70%"></td>
+                                } else {
+                                $month = date('m');
+                                $year = date('Y');         
+                                $get_attendance = get_attendance($month, $year, $user->id);
+                                }
+                                @endphp
+
+                                <tr @if($get_attendance['sal_gen'] != 0) style="background: #e2fab5;" @endif >
+
+                                    <td style="text-align: center;">{{ $i }}</td>
+                                    <td>{{ $user->employee_code }}</td>
+                                    <td>{{ $user->name }}</td>
+                                    <td>{{ $user->position_name }}</td>
+                                    <td style="text-align: center;">{{ $user->salary }} 
+                                @if($get_attendance['sal_gen'] == 0) 
+                                    <input type="hidden" name="earn_salary[{{$user->id}}]" value="{{ $get_attendance['salary'] }}">
+                                    <input type="hidden" name="user_id[]" value="{{ $user->id }}">
+                                    <input type="hidden" name="leave[{{$user->id}}]" value="{{ $get_attendance['leave_day'] }}">
+                                    <input type="hidden" name="absent[{{$user->id}}]" value="{{ $get_attendance['abs'] }}">
+                                    <input type="hidden" name="abs_deduction[{{$user->id}}]" value="{{ $get_attendance['abs_deduction'] }}">
+                                    <input type="hidden" name="net_salary[{{$user->id}}]" value="{{ $user->salary }}">
+                                    <input type="hidden" name="present[{{$user->id}}]" value="{{ $get_attendance['present'] }}">
+
+                                    <input type="hidden" name="working_day[{{$user->id}}]" value="{{ $get_attendance['working_day'] }}">
+                                    <input type="hidden" name="total_days[{{$user->id}}]" value="{{ $get_attendance['total_days'] }}">
+                                    @php
+                                        $count++;
+                                    @endphp
+                                @endif         
+                                    </td>
+                                    <td style="text-align: center;">{{ $get_attendance['present'] }} </td>
+                                    <td style="text-align: center;">{{ $get_attendance['abs'] }} </td>
+                                    <td style="text-align: center;"> {{ $get_attendance['leave_day'] }} </td>
+                                    <td style="text-align: center;"><input type="text" name="incentive[{{ $user->id }}]" class="form-control" style="max-width: 90px;margin: 0 auto;"></td>
+                                    <td style="text-align: center;"><input type="text" name="bonus[{{ $user->id }}]" class="form-control" style="max-width: 90px;margin: 0 auto;"></td>
                                 </tr>
+                           
+                                @endforeach 
                             </tbody>
                         </table>
                     </div>
@@ -120,9 +157,15 @@
             </div>
 
             <div class="col-md-12 text-right mt-3">
-                <a href="{{url('view-salary-slip')}}" class="btn btn-primary btn-sm">Proceed to Generate</a>
+               <!--  <a href="{{url('view-salary-slip')}}" class="btn btn-primary btn-sm">Proceed to Generate</a> -->
+                @if($count != 0)
+                <input type="submit" class="btn btn-primary btn-sm" value="Proceed to Generate">
+                @endif
             </div>
         </div>
+        </form> 
+
+
     </div>
     
     <script>
@@ -154,4 +197,21 @@
             var datatable = $('#examples').dataTable();
         });
     </script>
+
+<style type="text/css">
+#examples_salary th {
+    border: 1px solid #ddd;
+    font-weight: normal;
+    padding: 8px;
+    height: 50px;
+    background: #f3f3f3;
+}  
+#examples_salary td{
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+</style>
+
+
 @endsection('content')

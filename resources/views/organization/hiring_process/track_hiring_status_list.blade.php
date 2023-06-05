@@ -79,81 +79,101 @@
              <!--  <td>{{$row->hr_email}}</td> -->
               <td> 
 
-                @if($row->hiring_status == 0)
-                Send by Manager
-                @elseif($row->hiring_status == 1)
-                Offer letter Send
-                @elseif($row->hiring_status == 2)
-                Offer letter accepted
-                @elseif($row->hiring_status == 3)
-                Offer letter rejected
-                @elseif($row->hiring_status == 4)
-                Waiting for Visa Approval
-                @elseif($row->hiring_status == 5)
-                Visa Approved 
-                @elseif($row->hiring_status == 6)
-                Visa Rejected
-                @elseif($row->hiring_status == 7)
+              <?php 
+               if($row->hiring_status == 0){ ?>
+                Sent by Manager
+                <?php } elseif($row->hiring_status == 1) { ?>
+                Offer letter Sent
+                <?php } elseif($row->hiring_status == 2) { ?>
+                Offer Letter Accepted
+               <?php } elseif($row->hiring_status == 3) { ?>
+                Offer Letter Rejected
+               <?php } elseif($row->hiring_status == 4) { ?>
+                Waiting for eVisa Approval
+              <?php } elseif($row->hiring_status == 5) { ?>
+                eVisa Approved 
+              <?php } elseif($row->hiring_status == 6) { ?>
+                eVisa Rejected
+              <?php } elseif($row->hiring_status == 7) { ?>
               <?php
                 $sql = DB::table('send_pro_lc_mols')->select('status')->where('candidate_id', $row->id)->first();
-              ?>
-              @if($sql->status == 0)
-                Send to PRO for LC/MOL
-              @else
-              LC/MOL document uploaded
-              @endif
-              @elseif($row->hiring_status == 8)
+            
+              if(@$sql->status == 0) { ?>
+                Sent to PRO for LC/MOL
+            
+              <?php } else { ?>
+              LC/MOL document uploaded & sent to candidate
+              <?php } } elseif($row->hiring_status == 8) { ?>
                 LC/MOL signed copy uploaded
-              @elseif($row->hiring_status == 9)
+           <?php } elseif($row->hiring_status == 9) {
                  
-              <?php
+            
                 $sql = DB::table('send_pro_evisa_processings')->select('status')->where('candidate_id', $row->id)->first();
-              ?>
-              @if($sql->status == 0)
+              if(@$sql->status == 0) { ?>
                 Send to PRO for eVisa Processing
-              @else
+              
+              <?php } else { ?>
               eVisa Documents Uploaded
-              @endif
-
-              @elseif($row->hiring_status == 10)
-              <?php
+              <?php } } elseif($row->hiring_status == 10) {
+        
                 $sql = DB::table('medical_appointments')->select('status')->where('candidate_id', $row->id)->first();
-              ?>
-              @if($sql->status == 0)
-                Send Medical Test Appointment
-              @else
+              if(@$sql->status == 0) { ?>
+                Medical Test Appointment Sent
+             <?php } else { ?>
               Medical Reports Uploaded
-              @endif
-              @elseif($row->hiring_status == 11)
-               Send PRO for E-ID Process
-              @elseif($row->hiring_status == 12)
+              <?php }
+               } elseif($row->hiring_status == 11) { ?>
+               Sent PRO for EID Process
+              <?php } elseif($row->hiring_status == 12) { ?>
               EID Uploaded
-              @endif
+              <?php } ?>
 
               </td>
-              <td>{{date_format(date_create($row->updated_at),"d-M-Y")}}</td>
-              <td> <a href="#" data-toggle="modal" data-target="#myModal" class="text-primary" type="button" onclick="get_candidate_data('{{$row->id}}');"><i class="fa fa-eye" style="font-size:25px; margin-left: 25px;"></i> </td>
+              <td><?php echo date_format(date_create($row->updated_at),"d-M-Y"); ?></td>
+              <td> <a href="#" data-toggle="modal" data-target="#myModal" class="text-primary" type="button" onclick="get_candidate_data(<?php echo $row->id; ?>);"><i class="fa fa-eye" style="font-size:25px; margin-left: 25px;"></i> </td>
               <td>
                 <div class="dropdown">
                   <button class="btn btn-primary btn-xs dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Action</button>
                   <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <a href="#" data-toggle="modal" data-target="#UploadRequiredDoc" onclick="upload_required_doc('{{$row->id}}');" class="dropdown-item">Upload required doc</a>
-                    <a href="#" data-toggle="modal" data-target="#UploadSignedDoc" onclick="upload_signed_doc('{{$row->id}}');" class="dropdown-item">Upload  signed doc</a>
-                    <a href="#" data-toggle="modal" data-target="#SendVisaApprovalModal" onclick="send_visa_approval('{{$row->id}}');"  class="dropdown-item">Send for eVisa approval</a>
-                    <a href="#" data-toggle="modal" data-target="#SendProLCModal" onclick="send_to_pro('{{$row->id}}');"  class="dropdown-item">Send to PRO for LC/MOL Process</a>
-                    <a href="#" data-toggle="modal" data-target="#SendUploadProLCModal" onclick="upload_LC_MOL('{{$row->id}}');"  class="dropdown-item">Upload LC/MOL & send to candidate</a>
-                    <a href="#" data-toggle="modal" data-target="#UploadLCMOLModal" onclick="upload_LC_MOL_signed('{{$row->id}}');"  class="dropdown-item">Upload LC/MOL signed copy</a>
+<?php
+  $sign_doc = DB::table('candidate_required_documents')->where('candidate_id', $row->id)->where('document_id', '!=', 6)->count();
+?>
 
-                    <a href="#" data-toggle="modal" data-target="#PROeVisaProcessing" onclick="send_PRO_eVisa_processing('{{$row->id}}');"  class="dropdown-item">Send to PRO for eVisa processing</a>
+                    <a href="#" data-toggle="modal" @if($sign_doc != 0) @else data-target="#UploadRequiredDoc" onclick="upload_required_doc();" @endif class="dropdown-item"> @if($sign_doc != 0) <i class="fa fa-check" style="font-size: 14px;color: green;"></i> @else <i class="fa fa-close" style="font-size: 14px;color: red;"></i> @endif Upload required doc</a>
+<?php
+  $sign_doc = DB::table('candidate_required_documents')->where('candidate_id', $row->id)->where('document_id', 6)->count();
+?>
+                    <a href="#" @if($sign_doc != 0) @else data-toggle="modal" data-target="#UploadSignedDoc" onclick="upload_signed_doc(<?php echo $row->id; ?>);" @endif class="dropdown-item"> @if($sign_doc != 0) <i class="fa fa-check" style="font-size: 14px;color: green;"></i> @else <i class="fa fa-close" style="font-size: 14px;color: red;"></i> @endif Upload  signed doc</a>
 
-                    <a href="#" data-toggle="modal" data-target="#UploadeVisaSend" onclick="upload_eVisa_send_to_candidate('{{$row->id}}');"  class="dropdown-item">Upload eVisa and send to candidate</a>
+                    <a href="#" @if($row->hiring_status > 3) @else data-toggle="modal" data-target="#SendVisaApprovalModal" onclick="send_visa_approval('{{$row->id}}');" @endif class="dropdown-item"> @if($row->hiring_status > 3) <i class="fa fa-check" style="font-size: 14px;color: green;"></i> @else <i class="fa fa-close" style="font-size: 14px;color: red;"></i> @endif Send for eVisa approval</a>
+                    
+                    <a href="#" data-toggle="modal" @if($row->hiring_status > 6) @else data-target="#SendProLCModal" onclick="send_to_pro('{{$row->id}}');" @endif   class="dropdown-item"> @if($row->hiring_status > 6) <i class="fa fa-check" style="font-size: 14px;color: green;"></i> @else <i class="fa fa-close" style="font-size: 14px;color: red;"></i> @endif Send to PRO for LC/MOL Process</a>
 
-                    <a href="#" data-toggle="modal" data-target="#MedicalTestAppontment" onclick="send_medical_test_appontment('{{$row->id}}');"  class="dropdown-item">Send medical test appointment date</a>
+<?php
+  $sign_doc = DB::table('lc_mol_docs')->where('candidate_id', $row->id)->count();
+?>
 
-                    <a href="#" data-toggle="modal" data-target="#UploadMedicalReports" onclick="Upload_medical_reports('{{$row->id}}');"  class="dropdown-item">Upload medical reports</a>
-                    <a href="#" data-toggle="modal" data-target="#SendPROEIDProcess" onclick="Send_PRO_EID_process('{{$row->id}}');"  class="dropdown-item">Send to PRO for E-ID process</a>
+                    <a href="#" data-toggle="modal" @if($sign_doc != 0) @else data-target="#SendUploadProLCModal" onclick="upload_LC_MOL('{{$row->id}}');" @endif class="dropdown-item">  @if($sign_doc != 0) <i class="fa fa-check" style="font-size: 14px;color: green;"></i> @else <i class="fa fa-close" style="font-size: 14px;color: red;"></i> @endif Upload LC/MOL & send to candidate</a>
 
-                    <a href="#" data-toggle="modal" data-target="#UploadEIDcandidate" onclick="Upload_EID_candidate('{{$row->id}}');"  class="dropdown-item">Upload E-ID and send to candidate</a>
+                    <a href="#" data-toggle="modal" @if($row->hiring_status > 7) @else data-target="#UploadLCMOLModal" onclick="upload_LC_MOL_signed('{{$row->id}}');" @endif  class="dropdown-item"> @if($row->hiring_status > 7) <i class="fa fa-check" style="font-size: 14px;color: green;"></i> @else <i class="fa fa-close" style="font-size: 14px;color: red;"></i> @endif Upload LC/MOL signed copy</a>
+
+                    <a href="#" data-toggle="modal" @if($row->hiring_status > 8) @else data-target="#PROeVisaProcessing" onclick="send_PRO_eVisa_processing('{{$row->id}}');" @endif class="dropdown-item"> @if($row->hiring_status > 8) <i class="fa fa-check" style="font-size: 14px;color: green;"></i> @else <i class="fa fa-close" style="font-size: 14px;color: red;"></i> @endif Send to PRO for eVisa processing</a>
+
+<?php
+  $sign_doc = DB::table('visa_documents')->where('candidate_id', $row->id)->count();
+?>
+                    <a href="#" data-toggle="modal" @if($sign_doc != 0) @else data-target="#UploadeVisaSend" onclick="upload_eVisa_send_to_candidate('{{$row->id}}');" @endif  class="dropdown-item"> @if($sign_doc != 0) <i class="fa fa-check" style="font-size: 14px;color: green;"></i> @else <i class="fa fa-close" style="font-size: 14px;color: red;"></i> @endif Upload eVisa and send to candidate</a>
+
+                    <a href="#" data-toggle="modal" @if($row->hiring_status > 9) @else data-target="#MedicalTestAppontment" onclick="send_medical_test_appontment('{{$row->id}}');" @endif  class="dropdown-item"> @if($row->hiring_status > 9) <i class="fa fa-check" style="font-size: 14px;color: green;"></i> @else <i class="fa fa-close" style="font-size: 14px;color: red;"></i> @endif Send medical test appointment date</a>
+
+<?php
+  $sign_doc = DB::table('medical_reports')->where('candidate_id', $row->id)->count();
+?>
+                    <a href="#" data-toggle="modal" @if($sign_doc != 0) @else data-target="#UploadMedicalReports" onclick="Upload_medical_reports('{{$row->id}}');" @endif  class="dropdown-item"> @if($sign_doc != 0) <i class="fa fa-check" style="font-size: 14px;color: green;"></i> @else <i class="fa fa-close" style="font-size: 14px;color: red;"></i> @endif Upload medical reports</a>
+
+                    <a href="#" data-toggle="modal" @if($row->hiring_status > 10) @else data-target="#SendPROEIDProcess" onclick="Send_PRO_EID_process('{{$row->id}}');" @endif  class="dropdown-item"> @if($row->hiring_status > 10) <i class="fa fa-check" style="font-size: 14px;color: green;"></i> @else <i class="fa fa-close" style="font-size: 14px;color: red;"></i> @endif Send to PRO for EID process</a>
+
+                    <a href="#" data-toggle="modal" @if($row->hiring_status > 11) @else data-target="#UploadEIDcandidate" onclick="Upload_EID_candidate('{{$row->id}}');" @endif class="dropdown-item"> @if($row->hiring_status > 11) <i class="fa fa-check" style="font-size: 14px;color: green;"></i> @else <i class="fa fa-close" style="font-size: 14px;color: red;"></i> @endif Upload EID and send to candidate</a>
 
               </td>
             </tr>
@@ -368,7 +388,7 @@
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
-        <h4 class="modal-title">Send to PRO for E-ID processing of <span id="candidate_name_label_eip"></span></h4>
+        <h4 class="modal-title">Send to PRO for EID processing of <span id="candidate_name_label_eip"></span></h4>
         <button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
       <div class="modal-body">
@@ -376,11 +396,25 @@
         <form id="SendPROEIDProcessfrm" class="forms-sample row" action="" method="POST" enctype="multipart/form-data">
           <input type="hidden" name="candidate_rec_id" id="candidate_rec_id_eip">
           <div class="col-sm-12">
+              <div class="col-md-5">
+                <div class="form-group">
+                  <lable>Select Agency</lable>
+                  <select id="agency" onChange="getPro(this.value);" name="agency" class="form-control" style="width:100%" required>
+                    <option value="">--Select--</option>
+                    <option value="0">Self</option>
+                    @if(!empty($vanders))
+                    @foreach($vanders as $vander)
+                    <option value="{{$vander->id}}">{{ucwords($vander->name)}}</option>
+                    @endforeach
+                    @endif   
+                  </select>
+                </div>
+              </div>
+
              <div class="col-md-5">
                 <div class="form-group">
                   <lable>Select PRO</lable>
-                  <select id="manager_name" name="manager_name" class="form-control" style="width:100%" required>
-                    <option value="">--Select--</option>
+                  <select id="manager_name" multiple name="manager_name[]" class="select2 form-control manager_name" style="width:100%" required>
                     @if(!empty($pros))
                     @foreach($pros as $pro)
                     <option value="{{$pro->id}}">{{ucwords($pro->name)}} ({{ $pro->employee_code }})</option>
@@ -421,11 +455,25 @@
         <form id="PROeVisaProcessingfrm" class="forms-sample row" action="" method="POST" enctype="multipart/form-data">
           <input type="hidden" name="candidate_rec_id" id="candidate_rec_id_ep">
           <div class="col-sm-12">
-             <div class="col-md-5">
+              <div class="col-md-5">
+                <div class="form-group">
+                  <lable>Select Agency</lable>
+                  <select id="agency" onChange="getPro(this.value);" name="agency" class="form-control" style="width:100%" required>
+                    <option value="">--Select--</option>
+                    <option value="0">Self</option>
+                    @if(!empty($vanders))
+                    @foreach($vanders as $vander)
+                    <option value="{{$vander->id}}">{{ucwords($vander->name)}}</option>
+                    @endforeach
+                    @endif   
+                  </select>
+                </div>
+              </div>
+
+              <div class="col-md-5">
                 <div class="form-group">
                   <lable>Select PRO</lable>
-                  <select id="manager_name" name="manager_name" class="form-control" style="width:100%" required>
-                    <option value="">--Select--</option>
+                  <select id="manager_name" multiple name="manager_name[]" class="select2 form-control manager_name" style="width:100%" required>
                     @if(!empty($pros))
                     @foreach($pros as $pro)
                     <option value="{{$pro->id}}">{{ucwords($pro->name)}} ({{ $pro->employee_code }})</option>
@@ -459,7 +507,7 @@
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
-        <h4 class="modal-title">Upload E-ID document and send to <span id="candidate_name_label_es"></span></h4>
+        <h4 class="modal-title">Upload EID document and send to <span id="candidate_name_label_es"></span></h4>
         <button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
       <div class="modal-body">
@@ -697,11 +745,25 @@
         <form id="imageUploadFormPROLC" class="forms-sample row" action="" method="POST" enctype="multipart/form-data">
           <input type="hidden" name="candidate_rec_id" id="candidate_rec_id_pro">
           <div class="col-sm-12">
+            <div class="col-md-5">
+                <div class="form-group">
+                  <lable>Select Agency</lable>
+                  <select id="agency" onChange="getPro(this.value);" name="agency" class="form-control" style="width:100%" required>
+                    <option value="">--Select--</option>
+                    <option value="0">Self</option>
+                    @if(!empty($vanders))
+                    @foreach($vanders as $vander)
+                    <option value="{{$vander->id}}">{{ucwords($vander->name)}}</option>
+                    @endforeach
+                    @endif   
+                  </select>
+                </div>
+              </div>
              <div class="col-md-5">
                 <div class="form-group">
                   <lable>Select PRO</lable>
-                  <select id="manager_name" name="manager_name" class="form-control" style="width:100%" required>
-                    <option value="">--Select--</option>
+                  <select multiple id="manager_name_2" data-live-search="true" name="manager_name[]" class="select2 manager_name form-control" style="width:100%" required>
+                   
                     @if(!empty($pros))
                     @foreach($pros as $pro)
                     <option value="{{$pro->id}}">{{ucwords($pro->name)}} ({{ $pro->employee_code }})</option>
@@ -1288,7 +1350,7 @@ $(document).ready(function (e) {
                       $('#msg').show();
                       $('#msg').html(data).fadeIn('slow');
                       $('#msg').delay(5000).fadeOut('slow');
-                      alert("Document uploaded successfully");
+                      alert("LC/Mol uploaded and sent to the candidate for Thumb Impression on the same");
                       $('#alert_msg').html('<div class="alert alert-success">'+data.msg+'</div>');
                       $('#UploadRequiredDoc').modal('hide');
                       $('#imageUploadForm')[0].reset();
@@ -1527,7 +1589,7 @@ $(document).ready(function (e) {
                       $('#msg').show();
                       $('#msg').html(data).fadeIn('slow');
                       $('#msg').delay(5000).fadeOut('slow');
-                      alert("An email has been sent to the PRO for E-ID process.");
+                      alert("An email has been sent to the PRO for EID process.");
                       $('#alert_msg').html('<div class="alert alert-success">'+data.msg+'</div>');
                       $('#myModal').modal('hide');
                       $('#imageUploadForm')[0].reset();
@@ -1804,8 +1866,25 @@ $(document).ready(function (e) {
             spinner.hide();
         });
     }
-     
-</script>
 
+function getPro(val) {
+  $.ajax({
+    type: "GET",
+    url: "{{ route('getPro') }}",
+    data: {'company_id' : val},
+    success: function(data){
+        $(".manager_name").html(data);
+    }
+  });
+}
+  </script>   
+
+<link href="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js" defer></script>
+<script type="text/javascript">
+     $(document).ready(function() {
+$(".select2").select2();
+});
+</script>
 <!-- --------END GET COMPLETE DETAILS ----------- -->
 @endsection('content')

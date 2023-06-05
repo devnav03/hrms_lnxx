@@ -11,7 +11,7 @@
 <div style="width:100%;border:1px solid grey">
         <div style="background:#f7f0f0;padding:20px">
             <p>Dear <b>{{$name}}</b>,<br/> 
-            Your LC/MOL documents successfully uploaded.<br><br>Kindly find the attachment
+            Send back the attached LC/Mol copy with your signature and thumb impression. <br><br>Kindly find the attachment
         </p>
              
              </br>

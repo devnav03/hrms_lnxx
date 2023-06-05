@@ -26,6 +26,10 @@ Route::prefix('ajax')->group(function () {
     Route::get('get-source-masters', [AjaxController::class,'GetSourceMasters']);
     Route::post('get-status-source-masters', [AjaxController::class,'GetStatusSourceMasters']);
     Route::post('get-status-project', [AjaxController::class,'GetStatusProject']);
+    
+    Route::post('get-status-vander', [AjaxController::class,'GetStatusVander']);
+    Route::post('get-vander-staff-status', [AjaxController::class,'getVanderStaffStatus']);
+    
     Route::get('get-assign-task', [AjaxController::class,'GetAssignTask']);
     Route::any('get-notice-period', [AjaxController::class,'GetNoticeMasters']);
     Route::get('get-education-master', [AjaxController::class,'GetEducationMasters']);
@@ -108,6 +112,10 @@ Route::prefix('ajax')->group(function () {
     Route::get('get-employee-all-details/{id}', [AjaxController::class, 'GetEmployeeAllDetails']);
     Route::post('get-letter-preview', [AjaxController::class, 'GetLetterPreview']);
     Route::get('get-project-list', [AjaxController::class, 'GetProjectMaster']);
+    
+    Route::get('get-vander-list', [AjaxController::class, 'getVanderList']);
+    Route::get('get-vander-staff-list', [AjaxController::class, 'getVanderStaffList']);
+
     Route::post('save-project-activities', [AjaxController::class, 'SaveProjectActivities']);
     Route::get('get-activities-list/{id}', [AjaxController::class, 'GetActivitiesList']);
     Route::get('delete-project-activities/{id}', [AjaxController::class, 'DeleteProjectActivities']);

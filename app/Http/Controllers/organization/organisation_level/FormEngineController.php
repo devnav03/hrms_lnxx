@@ -45,7 +45,7 @@ class FormEngineController extends Controller{
                     $forms->save();
                 }
                 return redirect('add-form')->with('success','Updated successfuly');
-            }else{
+            } else {
                 $forms = new FormEngine();
                 $forms->orgnization_id=$user_id;
                 $forms->form_category_id=$request->form_category_id;
@@ -117,6 +117,7 @@ class FormEngineController extends Controller{
     
     public function SaveForm(Request $request){
         $user_id = Auth::user()->id;
+          $image_data = '';
         if(!empty($_POST['emp_code'])){
             $users = User::select('id','name')->where('id',$_POST['emp_code'])->first();
         }else{
@@ -125,6 +126,7 @@ class FormEngineController extends Controller{
             $users->name = $request->first_name.' '.$request->second_name.' '.$request->last_name;    
             $lnxx_login=$request->lnxx_login;
             $users->email = $request->email;
+            $users->salary = $request->salary;
             if(isset($request->mobile)){
             $users->mobile = $request->mobile;
             } else {
@@ -148,14 +150,11 @@ class FormEngineController extends Controller{
             $users->lnxx_login=$request->lnxx_login;
             $users->save();
 
-            $refer_code = $request->employee_code;
-            $all_data['name'] = $request->first_name.' '.$request->last_name;
-            $all_data['email'] = $request->email;
-            $all_data['mobile'] = $request->mobile;
-            $image_data = '';
             
-            // dd($image_data);
-            // dd($add_face_chk);
+           //dd($image_data);
+           
+
+           // dd($add_face_chk);
            
             if ($lnxx_login=='1') {
                 $curl = curl_init();  
@@ -174,8 +173,8 @@ class FormEngineController extends Controller{
                 //echo "<pre>"; print_r($response); echo "</pre>"; die; 
                 curl_close($curl);
             }
-        }
 
+        }
         unset($_POST['_token']);
         unset($_POST['emp_code']);
         $form_engine_cat = FormEngineCategory::select('id','name','is_multiple')->where('name',$_POST['forms_name'])->where('orgnization_id',$user_id)->first();
@@ -189,7 +188,7 @@ class FormEngineController extends Controller{
             if(!empty($prifix->emp_prifix)){
                 $users->password = strtoupper($prifix->emp_prifix).'@123#';
             }else{
-                $users->password = $request->first_name.'@123#';
+                 $users->password = $request->first_name.'@123#';
             }
             $this->SendRegisterMail($users);
         }
@@ -215,8 +214,9 @@ class FormEngineController extends Controller{
                             $filename = $file_name[$i];
                             $request[$fo_en->form_column][$i]->move(public_path('employee/'.$fo_en->form_column.''),$filename);
                             $_POST[$fo_en->form_column][$i]='employee/'.$fo_en->form_column.'/'.$filename;
+
                         }
-                    } else{
+                    }else{
                         if(!empty($file_name)){
                             $filename = $file_name;
                            
@@ -227,7 +227,7 @@ class FormEngineController extends Controller{
                             $path = public_path('employee/'.$fo_en->form_column.'/'.$filename);                          
                             $type = pathinfo($path, PATHINFO_EXTENSION); // get the image extension
                             $data = file_get_contents($path); // get the contents of the image file
-                            $image_data = 'data:image/' . $type . ';base64,' . base64_encode($data); 
+                            $image_data = base64_encode($data); 
                            }
 
                         }
@@ -236,10 +236,16 @@ class FormEngineController extends Controller{
             }
         }
         //dd($image_data);
-        $add_face_chk = $this->sendFaceCheck($all_data,$refer_code,$image_data);
-           
-        $res=$this->sendFaceCheckAlotte($refer_code);
-        //dd($res);  
+        $refer_code = $request->employee_code;
+            $all_data['name'] = $request->first_name.' '.$request->last_name;
+            $all_data['email'] = $request->email;
+            $all_data['mobile'] = $request->mobile;
+          
+       // $add_face_chk = $this->sendFaceCheck($all_data,$refer_code,$image_data);
+       
+       // $res=$this->sendFaceCheckAlotte($refer_code);
+        //dd($res);
+        // dd($add_face_chk);   
 
         if(isset($_POST['shift_id'])) {
         $emp_info->shift_id = $_POST['shift_id']; 
@@ -293,7 +299,7 @@ class FormEngineController extends Controller{
           "employee_name": "'.$all_data['name'].'",
           "employee_id": "'.$visitor_id.'",
           "employee_gender": "Male",
-         
+          "employee_image": "'.$image_data.'",
           "employee_email": "'.$all_data['email'].'",
           "employee_contact_number": "'.$all_data['mobile'].'",
           "contract_type": "PERMANENT",
@@ -340,10 +346,8 @@ class FormEngineController extends Controller{
     }
     public function getDeviceAllocateUser($user_id){
         $device_details=[];
-
         $device_details[0]['device_name'] = '7 Inch 1810584';
         $device_details[0]['office_name'] = 'Shailers Solution Private Limited';
-
         return $device_details;
     }
     public function SaveUpdatedProfile(Request $request){
@@ -356,6 +360,7 @@ class FormEngineController extends Controller{
         if(!empty($_POST['employee_code'])){
             $users->name = $request->first_name.' '.$request->second_name.' '.$request->last_name;
             $users->email = $request->email;
+            $users->salary = $request->salary;
             $users->save();
         }
         $emp_info = EmployeeInfo::where('user_id',$users->id)->where('from_cat_id',$form_engine_cat->id)->where('organisation_id',$user_id)->first();
@@ -392,7 +397,7 @@ class FormEngineController extends Controller{
             }
         }
         $emp_info->update_data = json_encode($_POST);
-        if(iseet($_POST['shift_id'])) {
+        if(isset($_POST['shift_id'])) {
         $emp_info->shift_id = $_POST['shift_id']; 
         }
         $form_engine2 = FormEngine::select('form_column','master_table')->where('form_category_id',$form_engine_cat->id)->where('form_column_id',1)->where('orgnization_id',$user_id)->get();
@@ -412,7 +417,7 @@ class FormEngineController extends Controller{
             }
         }
         $emp_info->datas = json_encode($_POST);
-        if(iseet($_POST['shift_id'])){
+        if(isset($_POST['shift_id'])){
         $emp_info->shift_id = $_POST['shift_id']; 
         }
         $emp_info->save();
@@ -464,7 +469,7 @@ class FormEngineController extends Controller{
             }
         }
 
-        if(iseet($_POST['shift_id'])){
+        if(isset($_POST['shift_id'])){
         $emp_info->shift_id = $_POST['shift_id']; 
         }
         $emp_info->update_data = json_encode($_POST);
@@ -487,7 +492,7 @@ class FormEngineController extends Controller{
             }
         }
         $emp_info->datas = json_encode($_POST);
-        if(iseet($_POST['shift_id'])){
+        if(isset($_POST['shift_id'])){
         $emp_info->shift_id = $_POST['shift_id']; 
         }
         $emp_info->save();

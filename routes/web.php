@@ -105,17 +105,16 @@ Route::any('offer-letter-reject/{id}', [App\Http\Controllers\Frontend\HomeContro
 Route::any('are-you-sure-offer-letter-accept/{id}', [App\Http\Controllers\Frontend\HomeController::class, 'areyousure_offer_letteraccept'])->name('are-you-sure-offer-letter-accept');
 Route::any('are-you-sure-offer-letter-reject/{id}', [App\Http\Controllers\Frontend\HomeController::class, 'areyousure_offer_letterreject'])->name('are-you-sure-offer-letter-reject');
 
-
 Route::any('evisa-approved/{id}', [App\Http\Controllers\Frontend\HomeController::class, 'evisa_approved'])->name('evisa-approved');
 Route::any('evisa-rejected/{id}', [App\Http\Controllers\Frontend\HomeController::class, 'evisa_rejected'])->name('evisa-rejected');
 
+Route::any('candidate-profile/{id}', [App\Http\Controllers\Frontend\HomeController::class, 'candidate_profile'])->name('candidate-profile');
 
+Route::get('getPro', [App\Http\Controllers\Frontend\HomeController::class, 'getPro'])->name('getPro');
 
+Route::get('shift-day-crone', [App\Http\Controllers\Frontend\HomeController::class, 'shift_day_crone'])->name('shift_day_crone');
 
-
-
-
-
+Route::get('holiday-calendar-crone', [App\Http\Controllers\Frontend\HomeController::class, 'holiday_calendar_crone'])->name('holiday-calendar-crone');
 
 
 Auth::routes();
@@ -216,6 +215,14 @@ Route::middleware(['auth', 'user-access:organization'])->group(function () {
     Route::get('add-project/{id}', [OrganizationMaster::class, 'AddProject']);
     Route::get('project-delete/{id}', [OrganizationMaster::class, 'DeleteProject']);    
 
+    Route::any('vanders', [OrganizationMaster::class, 'AddVander'])->name('add.vander');
+    Route::get('vanders/{id}', [OrganizationMaster::class, 'AddVander']);
+    Route::get('vander-delete/{id}', [OrganizationMaster::class, 'DeleteVander']); 
+
+    Route::any('vanders-staff', [OrganizationMaster::class, 'AddVanderStaff'])->name('add.vanders-staff');
+    Route::get('vanders-staff/{id}', [OrganizationMaster::class, 'AddVanderStaff']);
+    Route::get('vanders-staff-delete/{id}', [OrganizationMaster::class, 'DeleteVanderStaff']); 
+
     Route::any('add-assign-task', [OrganizationMaster::class, 'AddAssignTask']);
     Route::any('add-assign-task/{id}', [OrganizationMaster::class, 'AddAssignTask']);
     Route::any('assign-task-delete/{id}', [OrganizationMaster::class, 'DeleteAssignTask']); 
@@ -291,8 +298,25 @@ Route::middleware(['auth', 'user-access:organization'])->group(function () {
     Route::get('delete-form/{id}', [FormEngineController::class, 'DeleteForm']);
 
     Route::any('salary-head-master', [PayrollCompensationController::class, 'salaryHeadMaster']);
+    Route::any('salary-head-master-edit/{id}', [PayrollCompensationController::class, 'salaryHeadMasterEdit'])->name('salary-head-master-edit');
+    Route::any('salary-head-master-del/{id}', [PayrollCompensationController::class, 'salaryHeadMasterDel'])->name('salary-head-master-del');
+
+    Route::any('holiday-calendar', [PayrollCompensationController::class, 'holidayCalendar'])->name('holiday-calendar');
+    Route::any('holiday-calendar-edit/{id}', [PayrollCompensationController::class, 'holidayCalendarEdit'])->name('holiday-calendar-edit');
+    Route::any('holiday-calendar-del/{id}', [PayrollCompensationController::class, 'holidayCalendarDel'])->name('holiday-calendar-del');
+
+
+    Route::any('salary-history', [PayrollCompensationController::class, 'salaryHistory'])->name('salary-history');
+    Route::any('salary-history-by-month/{id}', [PayrollCompensationController::class, 'salaryHistoryByMonth'])->name('salary-history-by-month');
+
+    Route::any('export-salary-slip/{id}', [PayrollCompensationController::class, 'exportSalarySlip'])->name('export-salary-slip');
+
+
     Route::any('salary-generation', [PayrollCompensationController::class, 'salaryGeneration']);
-    Route::any('view-salary-slip', [PayrollCompensationController::class, 'viewSalarySlip']);
+    Route::any('view-salary-slip', [PayrollCompensationController::class, 'viewSalarySlip'])->name('view-salary-slip');
+
+    Route::any('employee-salary-slip', [PayrollCompensationController::class, 'employeeSalarySlip'])->name('employee-salary-slip');
+
     Route::any('salary-approval-flow', [PayrollCompensationController::class, 'salaryApprovalFlow']);
     Route::any('incentive-compensation', [PayrollCompensationController::class, 'incentiveCompensation']);
     Route::any('advance-loan-deduction', [PayrollCompensationController::class, 'advanceLoanDeduction']);

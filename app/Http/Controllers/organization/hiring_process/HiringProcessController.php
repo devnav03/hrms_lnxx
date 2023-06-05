@@ -23,6 +23,7 @@ use App\Models\DocumentMaster;
 use App\Models\CandidateRequiredDocument;
 use App\Models\CandidateSignedDocument;
 use App\Models\SendVisaApproval;
+use App\Models\Vander;
 
 use DB;
 class HiringProcessController extends Controller
@@ -193,12 +194,12 @@ class HiringProcessController extends Controller
        return redirect('hr-send-request-list')->with('success','Saved successfuly');
     }
     
-     public function TrackHiringStatusList(Request $request){  
+    public function TrackHiringStatusList(Request $request){  
         $user_id = Auth::user()->id;
        
         $user_org = User::where('id', $user_id)->select('organisation_id')->first();
 
-        $organisation = Organisation::where(['user_id'=>$user_org->organisation_id])->first();
+        // $organisation = Organisation::where(['user_id'=>$user_org->organisation_id])->first();
         $pos_name = 'Manager';
         $designation = PositionMaster::where('orgnization_id', $user_org->organisation_id)
         ->where('position_name', 'like', '%' . $pos_name . '%')->pluck('id')->toArray();
@@ -220,25 +221,52 @@ class HiringProcessController extends Controller
         //dd($documentmaster);
         //$send_hr_request = new SendHrRequest();
         
-        $result=DB::select("SELECT a.id,a.organisation_id,a.candidate_name,b.position_name,a.candidate_email,a.candidate_salary,a.candidate_gender,a.manager_name,a.candidate_mobile,a.hiring_status,a.hr_email,a.candidate_resume,a.created_at,a.updated_at FROM `send_hr_requests` as a INNER JOIN `position_masters` as b on a.candidate_position_id=b.id WHERE a.organisation_id=$user_id ORDER BY a.id ASC");
+        // $result=DB::select("SELECT a.id,a.organisation_id,a.candidate_name,b.position_name,a.candidate_email,a.candidate_salary,a.candidate_gender,a.manager_name,a.candidate_mobile,a.hiring_status,a.hr_email,a.candidate_resume,a.created_at,a.updated_at FROM `send_hr_requests` as a INNER JOIN `position_masters` as b on a.candidate_position_id=b.id WHERE a.organisation_id=$user_id ORDER BY a.id ASC");
+
+        $user_org = User::where('id', $user_id)->select('organisation_id')->first();
+        $organisation = Organisation::where('user_id', $user_org->organisation_id)->first();
+        
+        $result = \DB::table('send_hr_requests')
+            ->join('position_masters', 'position_masters.id', '=', 'send_hr_requests.candidate_position_id')
+            ->select('send_hr_requests.id','send_hr_requests.organisation_id','send_hr_requests.candidate_name','position_masters.position_name','send_hr_requests.candidate_email','send_hr_requests.candidate_salary','send_hr_requests.candidate_gender','send_hr_requests.manager_name','send_hr_requests.hr_email','send_hr_requests.candidate_resume','send_hr_requests.hiring_status','send_hr_requests.created_at', 
+                'send_hr_requests.updated_at')
+            ->where('send_hr_requests.organisation_id', $user_org->organisation_id)
+            ->orderBy('send_hr_requests.id', 'desc')->get();
+        
+        $vanders = Vander::where('status', 'Active')->select('id', 'name')->get();
+
         //echo "<pre>"; print_r($result); echo "</pre>"; die;
 
-        return view('organization.hiring_process.track_hiring_status_list',compact('organisation','result','managers','documentmaster', 'pros'));
-     }
+        return view('organization.hiring_process.track_hiring_status_list',compact('organisation','result','managers','documentmaster', 'pros', 'vanders'));
+    }
 
 
 
     /*----------------------START LIST SAVED CANDIDATES TO HR SEND EMAIL-----------------*/
-     public function HrSendRequestList(Request $request){
+    public function HrSendRequestList(Request $request){
         $user_id = Auth::user()->id;
-        $organisation = Organisation::where(['user_id'=>$user_id])->first();
-        $send_hr_request = new SendHrRequest();
         
-        $result=DB::select("SELECT a.id,a.organisation_id,a.candidate_name,b.position_name,a.candidate_email,a.candidate_salary,a.candidate_gender,a.manager_name,a.hr_email,a.candidate_resume,a.hiring_status,a.created_at FROM `send_hr_requests` as a INNER JOIN `position_masters` as b on a.candidate_position_id=b.id WHERE a.organisation_id=$user_id AND a.hiring_status='0' ORDER BY a.id ASC");
+        // $send_hr_request = new SendHrRequest();
+        
+        // $result=DB::select("SELECT a.id,a.organisation_id,a.candidate_name,b.position_name,a.candidate_email,a.candidate_salary,a.candidate_gender,a.manager_name,a.hr_email,a.candidate_resume,a.hiring_status,a.created_at FROM `send_hr_requests` as a INNER JOIN `position_masters` as b on a.candidate_position_id=b.id WHERE a.organisation_id=$user_id AND a.hiring_status='0' ORDER BY a.id ASC");
+
+        $user_org = User::where('id', $user_id)->select('organisation_id')->first();
+        $organisation = Organisation::where('user_id', $user_org->organisation_id)->first();
+        
+        $result = \DB::table('send_hr_requests')
+            ->join('position_masters', 'position_masters.id', '=', 'send_hr_requests.candidate_position_id')
+            ->join('users', 'users.email', '=', 'send_hr_requests.hr_email')
+            ->select('send_hr_requests.id','send_hr_requests.organisation_id','send_hr_requests.candidate_name','position_masters.position_name','send_hr_requests.candidate_email','send_hr_requests.candidate_salary','send_hr_requests.candidate_gender','send_hr_requests.manager_name','send_hr_requests.hr_email','send_hr_requests.candidate_resume','send_hr_requests.hiring_status','send_hr_requests.created_at', 
+                'users.name as hr_name')
+            ->where('send_hr_requests.hiring_status', 0)
+            ->where('send_hr_requests.organisation_id', $user_org->organisation_id)
+            ->orderBy('send_hr_requests.id', 'desc')->get();
+
+
        // echo "<pre>"; print_r($result); echo "</pre>"; die;
 
         return view('organization.hiring_process.hr_send_request_list',compact('organisation','result'));
-     }
+    }
      /*------------------------END LIST SAVED CANDIDATES TO HR SEND EMAIL-----------------*/
 
 

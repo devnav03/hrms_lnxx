@@ -56,9 +56,9 @@
                                     <th>Name</th>
                                     <th>Position</th>
                                     <th>Manager Name</th>
-                                    <th>Gender</th>
+                                    <th>Salary</th>
                                     <th>Candidate Email</th>
-                                    <th>HR Email</th> 
+                                    <th>HR Name</th> 
                                     <th>Download Resume</th> 
                                     <th>Request Date</th> 
                                     <th>Upload Offer Letter</th> 
@@ -69,19 +69,18 @@
                                 @foreach($result as $row)
                                 <tr>
                                     <td>{{$loop->iteration}}</td>
-                                    <td>{{$row->candidate_name}} </td>
-                                    <td>{{$row->position_name}} </td>
+                                    <td>{{$row->candidate_name}}</td>
+                                    <td>{{$row->position_name}}</td>
                                     <td>{{$row->manager_name}}</td>
-                                    <td>{{ucwords($row->candidate_gender)}} </td>
+                                    <td>{{ucwords($row->candidate_salary)}} </td>
                                     <td>{{$row->candidate_email}}</td>
-                                    <td>{{$row->hr_email}}</td>
+                                    <td>{{$row->hr_name}}</td>
                                     <td>@if(!empty($row->candidate_resume))<a target="_blank" class="btn btn-primary btn-xs" href="{{url('public'.$row->candidate_resume)}}" download><i class="fa fa-download"></i></a>@endif</td>
                                     <td>{{date_format(date_create($row->created_at),"d-M-Y")}}</td>
                                     <td> 
-                                     <a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#myModal" onclick="attach_offer_letter('{{$row->id}}');" href="#" Upload> <i class="fa fa-upload">Upload Offer Letter</i></a>
+                                     <a class="btn btn-primary btn-xs" data-toggle="modal" data-target="#myModal" onclick="attach_offer_letter('{{$row->id}}');" href="#" Upload> <i class="fa fa-upload"><!-- Upload Offer Letter --></i></a>
                                     </td>
-                                   <!-- attach_offer_letter -->
-                   
+                                   <!-- attach_offer_letter -->   
                                 </tr>
                                 @endforeach
                             @endif
@@ -98,7 +97,7 @@
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">Upload Offer Letter</h4>
+                <h4 class="modal-title">Upload and send offer letter to candidate</h4>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
                 <div class="modal-body">
@@ -132,7 +131,7 @@
 
                                 <div class="col-sm-4">
                                 <div class="form-group" style="margin-top: 32px;"> 
-                                    <button type="submit" class="btn btn-primary btn-sm  mr-2">Submit</button>
+                                    <button type="submit" class="btn btn-primary btn-sm  mr-2">Upload & Send</button>
                                 </div>
                             </div>
 
@@ -197,7 +196,7 @@ $(document).ready(function (e) {
                     $('#msg').show();
                     $('#msg').html(data).fadeIn('slow');
                     $('#msg').delay(5000).fadeOut('slow');
-                    alert("Offer Letter saved successfully");
+                    alert("Offer letter has been sent to the candidate.");
                     $('#alert_msg').html('<div class="alert alert-success">'+data.msg+'</div>');
                     $('#myModal').modal('hide');
                     $('#imageUploadForm')[0].reset();

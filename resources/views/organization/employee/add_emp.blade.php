@@ -100,39 +100,20 @@
                                     <?php if($row1->is_multiple==1){?>
                                     <a class="btn btn-success btn-sm add-more-<?=$name_id1;?>">+ Add More</a>
                                     <?php } ?>
+
                                 @if($name_id1 == 'employee-details')
-                                <div class="row">
-                                      <div class="col-sm-3">
-                                        <div class="form-group">
-                                          <label style="margin-bottom: 0.5rem;">* Shift Name</label>
-                                          <div class="help-block alert" style="padding: 0px;font-size: 12px;"></div>
-                                          @php $user_id = Auth::user()->id;@endphp
-                                          @php 
-                                          $shifts_result= DB::select("SELECT `id`,`shift_name` FROM `shift_masters` WHERE orgnization_id=$user_id");
-                                          @endphp 
-                                          <select class="form-control" style="width:100%" id="shift_id" name="shift_id" required>
-                                            <option>Select Shift</option>
-                                            @if(!empty($shifts_result))
-                                            @foreach($shifts_result as $shifts_data)
-                                            <option value="{{$shifts_data->id}}">{{$shifts_data->shift_name}}</option>
-                                            @endforeach
-                                            @endif
-                                          </select>
-                                        </div>
-                                      </div>
-                                    </div>
+                                <div class="row">      
+                                </div>
                                 @endif
 
                                 <?php 
                                 if(auth()->user()->id == 29){
-
-                                $seg=Request::segment(1);    
-                                if($seg=='add-employeess'){?> 
+                                ?>
+                                @if($name_id1 == 'employee-details') 
                                 <label><b>Login to Lnxx ?</b></label>
                                 <input type="checkbox" value="1" name="lnxx_login"> &nbsp;&nbsp;
-                                <?php } } ?>
-
-
+                                @endif
+                                <?php  } ?>
                                     <button type="submit" class="btn btn-primary btn-sm mr-2 employee_button">Submit</button>
                                 </form>
                                 </div>
